@@ -254,73 +254,15 @@ old_code <- function() {
   #and mean vector are estimated. This repeats until the difference between the covariance
   #matricies from adjacent iterations differs by a trivial amount
 
-  vitality_imp <- mice(vitality_wide_df, m = 1, meth = "pmm")
-  summary(vitality_imp)
   
-  #Diagnostic checking
-  xyplot(vitality_imp, TimeVit_2 ~ TimeVit_3, pch = 18, cex = 1)
-  densityplot(vitality_imp)
-  stripplot(vitality_imp, pch = 20, cex = 1.2)
-  
-  #Complete
-  vitality_complete <- complete(vitality_imp)
-  
+  #Correlations over time with wide & imputed data
+  #Can show how dependent the multiple measurements are and do they change overtime
   #Correlating 
   vitality_wide_cor <- vitality_complete %>%
     correlate() %>%
     shave(upper = FALSE) %>%
     fashion(decimals = 2)
   vitality_wide_cor
-  
-  vitality_complete$subid <- vitality_wide$subid
-  vitality_complete$Intervention <- vitality_wide$Intervention
-  str(vitality_complete)
-  head(vitality_complete)
-  
-  #Emotional Cap
-  diss_time <- c(1, 2, 3, 4)
-  emotionalcap <- round(dissdata$emotionalcap_all, digits = 2)
-  emotionalcap_df <- cbind(
-    'subid' = dissdata$subid,
-    'Intervention' = dissdata$Intervention,
-    'Time' = diss_time,
-    'emotionalcap' = emotionalcap
-  )
-  
-  emotionalcap_df <- as.data.frame(emotionalcap_df)
-  class(emotionalcap_df)
-  emotionalcap_wide <- emotionalcap_df %>%
-    mutate(Time = paste0('TimeEmoCap_', Time)) %>%
-    spread(Time, emotionalcap) %>%
-    select(subid, Intervention, TimeEmoCap_1, TimeEmoCap_2, TimeEmoCap_3, TimeEmoCap_4, everything())
-  head(emotionalcap_wide)
-  
-  emotionalcap_wide2 <- lapply(emotionalcap_wide[,c(3:6)], as.character)
-  str(emotionalcap_wide2)
-  emotionalcap_wide3 <- lapply(emotionalcap_wide2[], as.numeric)
-  str(emotionalcap_wide3)
-  emotionalcap_wide2 <- emotionalcap_wide3
-  
-  emotionalcap_wide$TimeEmoCap_1 <- emotionalcap_wide2$TimeEmoCap_1
-  emotionalcap_wide$TimeEmoCap_2 <- emotionalcap_wide2$TimeEmoCap_2
-  emotionalcap_wide$TimeEmoCap_3 <- emotionalcap_wide2$TimeEmoCap_3
-  emotionalcap_wide$TimeEmoCap_4 <- emotionalcap_wide2$TimeEmoCap_4
-  str(emotionalcap_wide)
-  class(emotionalcap_wide)
-  
-  emotionalcap_wide_df <- as.data.frame(emotionalcap_wide2)
-  class(emotionalcap_wide_df)
-  
-  emocap_imp <- mice(emotionalcap_wide_df, m = 1, meth = "pmm")
-  summary(emocap_imp)
-  
-  #Diagnostic checking
-  xyplot(emocap_imp, TimeEmoCap_2 ~ TimeEmoCap_3, pch = 18, cex = 1)
-  densityplot(emocap_imp)
-  stripplot(emocap_imp, pch = 20, cex = 1.2)
-  
-  #Complete
-  emocap_complete <- complete(emocap_imp)
   
   #Correlating 
   emocap_wide_cor <- emocap_complete %>%
@@ -329,117 +271,14 @@ old_code <- function() {
     fashion(decimals = 2)
   emocap_wide_cor
   
-  emocap_complete$subid <- emotionalcap_wide$subid
-  emocap_complete$Intervention <- emotionalcap_wide$Intervention
-  str(emocap_complete)
-  head(emocap_complete)
-  
-  #Loneliness
-  head(dissdata$recloneliness_avg)
-  diss_time <- c(1, 2, 3, 4)
-  loneliness <- round(dissdata$recloneliness_avg, digits = 2)
-  loneliness_df <- cbind(
-    'subid' = dissdata$subid,
-    'Intervention' = dissdata$Intervention,
-    'Time' = diss_time,
-    'loneliness' = loneliness
-  )
-  loneliness_df <- as.data.frame(loneliness_df)
-  
-  loneliness_wide <- loneliness_df %>%
-    mutate(Time = paste0('TimeLon_', Time)) %>%
-    spread(Time, loneliness) %>%
-    select(subid, Intervention, TimeLon_1, TimeLon_2, TimeLon_3, TimeLon_4, everything())
-  head(loneliness_wide)
-  
-  lon_wide2 <- lapply(loneliness_wide[,c(3:6)], as.character)
-  str(lon_wide2)
-  lon_wide3 <- lapply(lon_wide2[], as.numeric)
-  str(lon_wide3)
-  lon_wide2 <- lon_wide3
-  
-  loneliness_wide$TimeLon_1 <- lon_wide2$TimeLon_1
-  loneliness_wide$TimeLon_2 <- lon_wide2$TimeLon_2
-  loneliness_wide$TimeLon_3 <- lon_wide2$TimeLon_3
-  loneliness_wide$TimeLon_4 <- lon_wide2$TimeLon_4
-  str(loneliness_wide)
-  class(loneliness_wide)
-  
-  lon_wide_df <- as.data.frame(lon_wide2)
-  class(lon_wide_df)
-  
-  lon_imp <- mice(lon_wide_df, m = 1, meth = "pmm")
-  summary(lon_imp)
-  
-  #Diagnostic checking
-  xyplot(lon_imp, TimeLon_2 ~ TimeLon_3, pch = 18, cex = 1)
-  densityplot(lon_imp)
-  stripplot(lon_imp, pch = 20, cex = 1.2)
-  
-  #Complete
-  lon_complete <- complete(lon_imp)
-  
+
   #Correlating 
   lon_wide_cor <- lon_complete %>%
     correlate() %>%
     shave(upper = FALSE) %>%
     fashion(decimals = 2)
   lon_wide_cor
-  
-  lon_complete$subid <- loneliness_wide$subid
-  lon_complete$Intervention <- loneliness_wide$Intervention
-  str(lon_complete)
-  head(lon_complete)
-  
-  #Depression 
-  diss_time <- c(1, 2, 3, 4)
-  class(dissdata$depression_all)
-  glimpse(dissdata$logdepression)
-  head(dissdata$logdepression)
-  
-  depression <- round(dissdata$logdepression, digits = 2)
-  depression_df <- cbind(
-    'subid' = dissdata$subid,
-    'Intervention' = dissdata$Intervention,
-    'Time' = diss_time,
-    'depression' = depression
-  )
-  depression_df <- as.data.frame(depression_df)
-  class(depression_df)
-  depression_df$Time <- as.numeric(depression_df$Time)
-  class(depression_df$Time)
-  depression_wide <- depression_df %>%
-    mutate(Time = paste0('TimeDep_', Time)) %>%
-    spread(Time, depression) %>%
-    select(subid, Intervention, TimeDep_1, TimeDep_2, TimeDep_3, TimeDep_4, everything())
-  head(depression_wide)
-  
-  dep_wide2 <- lapply(depression_wide[,c(3:6)], as.character)
-  str(dep_wide2)
-  dep_wide3 <- lapply(dep_wide2[], as.numeric)
-  str(dep_wide3)
-  dep_wide2 <- dep_wide3
-  
-  depression_wide$TimeDep_1 <- dep_wide2$TimeDep_1
-  depression_wide$TimeDep_2 <- dep_wide2$TimeDep_2
-  depression_wide$TimeDep_3 <- dep_wide2$TimeDep_3
-  depression_wide$TimeDep_4 <- dep_wide2$TimeDep_4
-  str(depression_wide)
-  class(depression_wide)
-  
-  dep_wide_df <- as.data.frame(dep_wide2)
-  class(dep_wide_df)
-  
-  dep_imp <- mice(dep_wide_df, m = 1, meth = "pmm")
-  summary(dep_imp)
-  
-  #Diagnostic checking
-  xyplot(dep_imp, TimeDep_2 ~ TimeDep_3, pch = 18, cex = 1)
-  densityplot(dep_imp)
-  stripplot(dep_imp, pch = 20, cex = 1.2)
-  
-  #Complete
-  dep_complete <- complete(dep_imp)
+
   
   #Correlating 
   dep_wide_cor <- dep_complete %>%
@@ -448,57 +287,6 @@ old_code <- function() {
     fashion(decimals = 2)
   dep_wide_cor
   
-  dep_complete$subid <- depression_wide$subid
-  dep_complete$Intervention <- depression_wide$Intervention
-  str(dep_complete)
-  head(dep_complete)
-  
-  #Communal Orientation
-  diss_time <- c(1, 2, 3, 4)
-  class(dissdata$communalorient_all)
-  summary(dissdata$communalorient_all)
-  co <- round(dissdata$communalorient_all, digits = 2)
-  co_df <- cbind(
-    'subid' = dissdata$subid,
-    'Intervention' = dissdata$Intervention,
-    'Time' = diss_time,
-    'co' = co
-  )
-  co_df <- as.data.frame(co_df)
-  class(co_df$Time)
-  co_df$Time <- as.numeric(co_df$Time)
-  co_wide <- co_df %>%
-    mutate(Time = paste0('TimeCO_', Time)) %>%
-    spread(Time, co) %>%
-    select(subid, Intervention, TimeCO_1, TimeCO_2, TimeCO_3, TimeCO_4, everything())
-  head(co_wide)
-  
-  co_wide2 <- lapply(co_wide[,c(3:6)], as.character)
-  str(co_wide2)
-  co_wide3 <- lapply(co_wide2[], as.numeric)
-  str(co_wide3)
-  co_wide2 <- co_wide3
-  
-  co_wide$TimeCO_1 <- co_wide2$TimeCO_1
-  co_wide$TimeCO_2 <- co_wide2$TimeCO_2
-  co_wide$TimeCO_3 <- co_wide2$TimeCO_3
-  co_wide$TimeCO_4 <- co_wide2$TimeCO_4
-  str(co_wide)
-  class(co_wide)
-  
-  co_wide_df <- as.data.frame(co_wide2)
-  class(dep_wide_df)
-  
-  co_imp <- mice(co_wide_df, m = 1, meth = "pmm")
-  summary(co_imp)
-  
-  #Diagnostic checking
-  xyplot(co_imp, TimeCO_2 ~ TimeCO_3, pch = 18, cex = 1)
-  densityplot(co_imp)
-  stripplot(co_imp, pch = 20, cex = 1.2)
-  
-  #Complete
-  co_complete <- complete(co_imp)
   
   #Correlating 
   co_wide_cor <- co_complete %>%
@@ -507,69 +295,6 @@ old_code <- function() {
     fashion(decimals = 2)
   co_wide_cor
   
-  co_complete$subid <- co_wide$subid
-  co_complete$Intervention <- co_wide$Intervention
-  str(co_complete)
-  head(co_complete)
-  
-  #Social Engagement
-  socengage <- cbind(
-    'socengage1' = dissdata$socialactivity1, 
-    'socengage2' = dissdata$socialactivity2, 
-    'socengage3' = dissdata$socialactivity3, 
-    'socengage4' = dissdata$socialactivity4)
-  
-  summary(socengage)
-  head(socengage)
-  socengage_all <- (dissdata$socialactivity1 + dissdata$socialactivity2 + dissdata$socialactivity3 + dissdata$socialactivity4)/4
-  socengage_all
-  
-  diss_time <- c(1, 2, 3, 4)
-  summary(socengage_all)
-  socengage <- round(socengage_all, digits = 2)
-  socengage_df <- cbind(
-    'subid' = dissdata$subid,
-    'Intervention' = dissdata$Intervention,
-    'Time' = diss_time,
-    'socengage' = socengage_all
-  )
-  socengage_df <- as.data.frame(socengage_df)
-  class(socengage_df$Time)
-  socengage_df$Time <- as.numeric(socengage_df$Time)
-  class(socengage_df$Time)
-  socengage_wide <- socengage_df %>%
-    mutate(Time = paste0('TimeSocEngage_', Time)) %>%
-    spread(Time, socengage) %>%
-    select(subid, Intervention, TimeSocEngage_1, TimeSocEngage_2, TimeSocEngage_3, TimeSocEngage_4, everything())
-  head(socengage_wide)
-  
-  socengage_wide2 <- lapply(socengage_wide[,c(3:6)], as.character)
-  str(socengage_wide2)
-  socengage_wide3 <- lapply(socengage_wide2[], as.numeric)
-  str(socengage_wide3)
-  socengage_wide2 <- socengage_wide3
-  
-  socengage_wide$TimeSocEngage_1 <- socengage_wide2$TimeSocEngage_1
-  socengage_wide$TimeSocEngage_2 <- socengage_wide2$TimeSocEngage_2
-  socengage_wide$TimeSocEngage_3 <- socengage_wide2$TimeSocEngage_3
-  socengage_wide$TimeSocEngage_4 <- socengage_wide2$TimeSocEngage_4
-  str(socengage_wide)
-  class(socengage_wide)
-  
-  socengage_wide_df <- as.data.frame(socengage_wide2)
-  class(socengage_wide_df)
-  
-  socengage_imp <- mice(socengage_wide_df, m = 1, meth = "pmm")
-  summary(socengage_imp)
-  
-  #Diagnostic checking
-  xyplot(socengage_imp, TimeSocEngage_2 ~ TimeSocEngage_3, pch = 18, cex = 1)
-  densityplot(socengage_imp)
-  stripplot(socengage_imp, pch = 20, cex = 1.2)
-  
-  #Complete
-  socengage_complete <- complete(socengage_imp)
-  head(socengage_complete)
   
   #Correlating 
   socengage_wide_cor <- socengage_complete %>%
@@ -578,59 +303,6 @@ old_code <- function() {
     fashion(decimals = 2)
   socengage_wide_cor
   
-  socengage_complete$subid <- socengage_wide$subid
-  socengage_complete$Intervention <- socengage_wide$Intervention
-  str(socengage_complete)
-  head(socengage_complete)
-  
-  #Stress
-  diss_time <- c(1, 2, 3, 4)
-  stress <- round(stress_all, digits = 2)
-  stress_all
-  stress_df <- cbind(
-    'subid' = dissdata$subid,
-    'Intervention' = dissdata$Intervention,
-    'Time' = diss_time,
-    'stress' = stress
-  )
-  stress_df <- as.data.frame(stress_df)
-  class(stress_df$Time)
-  stress_df$Time <- as.numeric(stress_df$Time)
-  
-  stress_wide <- stress_df %>%
-    mutate(Time = paste0('TimeStress_', Time)) %>%
-    spread(Time, stress) %>%
-    select(subid, Intervention, TimeStress_1, TimeStress_2, TimeStress_3, TimeStress_4, everything())
-  head(stress_wide)
-  
-  stress_wide2 <- lapply(stress_wide[,c(3:6)], as.character)
-  str(stress_wide2)
-  stress_wide3 <- lapply(stress_wide2[], as.numeric)
-  str(stress_wide3)
-  stress_wide2 <- stress_wide3
-  
-  stress_wide$TimeStress_1 <- stress_wide2$TimeStress_1
-  stress_wide$TimeStress_2 <- stress_wide2$TimeStress_2
-  stress_wide$TimeStress_3 <- stress_wide2$TimeStress_3
-  stress_wide$TimeStress_4 <- stress_wide2$TimeStress_4
-  str(stress_wide)
-  class(stress_wide)
-  
-  stress_wide_df <- as.data.frame(stress_wide2)
-  class(stress_wide_df)
-  
-  stress_imp <- mice(stress_wide_df, m = 1, meth = "pmm")
-  summary(stress_imp)
-  
-  #Diagnostic checking
-  xyplot(stress_imp, TimeStress_2 ~ TimeStress_3, pch = 18, cex = 1)
-  densityplot(stress_imp)
-  stripplot(stress_imp, pch = 20, cex = 1.2)
-  
-  #Complete
-  stress_complete <- complete(stress_imp)
-  head(stress_complete)
-  
   #Correlating 
   stress_wide_cor <- stress_complete %>%
     correlate() %>%
@@ -638,275 +310,12 @@ old_code <- function() {
     fashion(decimals = 2)
   stress_wide_cor
   
-  stress_complete$subid <- stress_wide$subid
-  stress_complete$Intervention <- stress_wide$Intervention
-  str(stress_complete)
-  head(stress_complete)
-  
-  #Quality Communication
-  diss_time <- c(1, 2, 3, 4)
-  qualcomm <- round(dissdata$qualcomm_all, digits = 2)
-  
-  qualcomm_df <- cbind(
-    'subid' = dissdata$subid,
-    'Intervention' = dissdata$Intervention,
-    'Time' = diss_time,
-    'qualcomm' = qualcomm
-  )
-  qualcomm_df <- as.data.frame(qualcomm_df)
-  class(qualcomm_df$Time)
-  qualcomm_df$Time <- as.numeric(qualcomm_df$Time)
-  
-  qualcomm_wide <- qualcomm_df %>%
-    mutate(Time = paste0('TimeQualComm_', Time)) %>%
-    spread(Time, qualcomm) %>%
-    select(subid, Intervention, TimeQualComm_1, TimeQualComm_2, TimeQualComm_3, TimeQualComm_4, everything())
-  head(qualcomm_wide)
-  
-  qualcomm_wide2 <- lapply(qualcomm_wide[,c(3:6)], as.character)
-  str(qualcomm_wide2)
-  qualcomm_wide3 <- lapply(qualcomm_wide2[], as.numeric)
-  str(qualcomm_wide3)
-  qualcomm_wide2 <- qualcomm_wide3
-  
-  qualcomm_wide$TimeQualComm_1 <- qualcomm_wide2$TimeQualComm_1
-  qualcomm_wide$TimeQualComm_2 <- qualcomm_wide2$TimeQualComm_2
-  qualcomm_wide$TimeQualComm_3 <- qualcomm_wide2$TimeQualComm_3
-  qualcomm_wide$TimeQualComm_4 <- qualcomm_wide2$TimeQualComm_4
-  str(qualcomm_wide)
-  class(qualcomm_wide)
-  
-  qualcomm_wide_df <- as.data.frame(qualcomm_wide2)
-  class(qualcomm_wide_df)
-  
-  qualcomm_imp <- mice(qualcomm_wide_df, m = 1, meth = "pmm")
-  summary(qualcomm_imp)
-  
-  #Diagnostic checking
-  xyplot(qualcomm_imp, TimeQualComm_2 ~ TimeQualComm_3, pch = 18, cex = 1)
-  densityplot(qualcomm_imp)
-  stripplot(qualcomm_imp, pch = 20, cex = 1.2)
-  
-  #Complete
-  qualcomm_complete <- complete(qualcomm_imp)
-  head(qualcomm_complete)
-  
   #Correlating 
   qualcomm_wide_cor <- qualcomm_complete %>%
     correlate() %>%
     shave(upper = FALSE) %>%
     fashion(decimals = 2)
   qualcomm_wide_cor
-  
-  qualcomm_complete$subid <- qualcomm_wide$subid
-  qualcomm_complete$Intervention <- qualcomm_wide$Intervention
-  str(qualcomm_complete)
-  head(qualcomm_complete)
-  
-  #Joining key var data frames together
-  head(vitality_complete)
-  head(emocap_complete)
-  head(emocap_wide)
-  head(co_complete)
-  as.data.frame(co_complete)
-  df_vitemocap <- inner_join(x = vitality_complete, y = emocap_complete, by = c("subid", "Intervention"))
-  head(df_vitemocap)
-  
-  df_1_lon <- inner_join(x = df_vitemocap, y = lon_complete, by = c("subid", "Intervention"))
-  df_1_lon
-  
-  df_2_dep <- inner_join(x = df_1_lon, y = dep_complete, by = c("subid", "Intervention"))
-  df_2_dep
-  
-  df_3_co <- inner_join(x = df_2_dep, y = co_complete, by = c("subid", "Intervention"))
-  df_3_co
-  
-  df_4_socengage <- inner_join(x = df_3_co, y = socengage_complete, by = c("subid", "Intervention"))
-  df_4_socengage
-  
-  df_5_stress <- inner_join(x = df_4_socengage, y = stress_complete, by = c("subid", "Intervention"))
-  df_5_stress
-  
-  df_complete <- df_5_stress
-  head(df_complete)
-  str(df_complete)
-  df_complete$subid <- as.character(df_complete$subid)
-  #YAY! The data R imputed!
-  #Correlations over time with wide & imputed data
-  #Can show how dependent the multiple measurements are and do they change overtime
-  #Now need to bring them back to long
-  library(dplyr)
-  library(tidyr)
-  head(df_complete)
-  
-  df_complete2 <- gather(df_complete, key = "Time", value = "Vitality", TimeVit_1:TimeVit_4)
-  head(df_complete2)
-  df_complete2$Time <- gsub("TimeVit_1", "1", df_complete2$Time)
-  df_complete2$Time <- gsub("TimeVit_2", "2", df_complete2$Time)
-  df_complete2$Time <- gsub("TimeVit_3", "3", df_complete2$Time)
-  df_complete2$Time <- gsub("TimeVit_4", "4", df_complete2$Time)
-  head(df_complete2)
-  
-  vit_complete2 <- cbind(
-    'subid' = df_complete$subid,
-    'Time' = df_complete2$Time,
-    'Vitality' = df_complete2$Vitality
-  )
-  str(vit_complete2)
-  vit_complete2 <- as.data.frame(vit_complete2)
-  head(vit_complete2)
-  
-  df_complete3 <- gather(df_complete, key = "Time", value = "EmoCap", TimeEmoCap_1:TimeEmoCap_4)
-  df_complete3$Time <- gsub("TimeEmoCap_1", "1", df_complete3$Time)
-  df_complete3$Time <- gsub("TimeEmoCap_2", "2", df_complete3$Time)
-  df_complete3$Time <- gsub("TimeEmoCap_3", "3", df_complete3$Time)
-  df_complete3$Time <- gsub("TimeEmoCap_4", "4", df_complete3$Time)         
-  head(df_complete3)
-  class(df_complete$subid)
-  subid <- as.character(df_complete$subid)
-  emocap_complete2 <- cbind(
-    'subid' = subid,
-    'Time' = df_complete3$Time,
-    'EmoCap' = df_complete3$EmoCap
-  )
-  head(emocap_complete2)
-  emocap_complete2 <- as.data.frame(emocap_complete2)
-  head(emocap_complete2)
-  
-  df_complete4 <- gather(df_complete, key = "Time", value = "Loneliness", TimeLon_1:TimeLon_4)
-  df_complete4$Time <- gsub("TimeLon_1", "1", df_complete4$Time)
-  df_complete4$Time <- gsub("TimeLon_2", "2", df_complete4$Time)
-  df_complete4$Time <- gsub("TimeLon_3", "3", df_complete4$Time)
-  df_complete4$Time <- gsub("TimeLon_4", "4", df_complete4$Time)  
-  head(df_complete4)
-  
-  lon_complete2 <- cbind(
-    'subid' = subid,
-    'Time' = df_complete4$Time,
-    'Lon' = df_complete4$Loneliness
-  )
-  head(lon_complete2)
-  lon_complete2 <- as.data.frame(lon_complete2)
-  head(lon_complete2)
-  
-  df_complete5 <- gather(df_complete, key = "Time", value = "Depression", TimeDep_1:TimeDep_4)
-  df_complete5$Time <- gsub("TimeDep_1", "1", df_complete5$Time)
-  df_complete5$Time <- gsub("TimeDep_2", "2", df_complete5$Time)
-  df_complete5$Time <- gsub("TimeDep_3", "3", df_complete5$Time)
-  df_complete5$Time <- gsub("TimeDep_4", "4", df_complete5$Time)
-  
-  dep_complete2 <- cbind(
-    'subid' = subid,
-    'Time' = df_complete5$Time,
-    'Depression' = df_complete5$Depression
-  )
-  head(dep_complete2)
-  dep_complete2 <- as.data.frame(dep_complete2)
-  head(dep_complete2)
-  
-  df_complete6 <- gather(df_complete, key = "Time", value = "CommunalOrient", TimeCO_1:TimeCO_4)
-  df_complete6$Time <- gsub("TimeCO_1", "1", df_complete6$Time)
-  df_complete6$Time <- gsub("TimeCO_2", "2", df_complete6$Time)
-  df_complete6$Time <- gsub("TimeCO_3", "3", df_complete6$Time)
-  df_complete6$Time <- gsub("TimeCO_4", "4", df_complete6$Time)  
-  head(df_complete6)
-  
-  co_complete2 <- cbind(
-    'subid' = subid,
-    'Time' = df_complete6$Time,
-    'CO' = df_complete6$CommunalOrient
-  )
-  head(co_complete2)
-  co_complete2 <- as.data.frame(co_complete2)
-  head(co_complete2)
-  
-  df_complete7 <- gather(df_complete, key = "Time", value = "SocEngage", TimeSocEngage_1:TimeSocEngage_4)
-  df_complete7$Time <- gsub("TimeSocEngage_1", "1", df_complete7$Time)
-  df_complete7$Time <- gsub("TimeSocEngage_2", "2", df_complete7$Time)
-  df_complete7$Time <- gsub("TimeSocEngage_3", "3", df_complete7$Time)
-  df_complete7$Time <- gsub("TimeSocEngage_4", "4", df_complete7$Time) 
-  
-  socengage_complete2 <- cbind(
-    'subid' = subid,
-    'Time' = df_complete7$Time,
-    'SocEngage' = df_complete7$SocEngage
-  )
-  head(socengage_complete2)
-  socengage_complete2 <- as.data.frame(socengage_complete2)
-  head(socengage_complete2)
-  
-  df_complete8 <- gather(df_complete, key = "Time", value = "Stress", TimeStress_1:TimeStress_4)
-  df_complete8$Time <- gsub("TimeStress_1", "1", df_complete8$Time)
-  df_complete8$Time <- gsub("TimeStress_2", "2", df_complete8$Time)
-  df_complete8$Time <- gsub("TimeStress_3", "3", df_complete8$Time)
-  df_complete8$Time <- gsub("TimeStress_4", "4", df_complete8$Time) 
-  
-  stress_complete2 <- cbind(
-    'subid' = subid,
-    'Time' = df_complete8$Time,
-    'Stress' = df_complete8$Stress
-  )
-  head(stress_complete2)
-  stress_complete2 <- as.data.frame(stress_complete2)
-  head(stress_complete2)
-  
-  dissdata_long <- inner_join(stress_complete2, socengage_complete2, by = c("subid", "Time")) 
-  head(dissdata_long)
-  dissdata_long2 <- inner_join(dissdata_long, co_complete2, by = c("subid", "Time"))
-  head(dissdata_long2)      
-  dissdata_long3 <- inner_join(dissdata_long2, dep_complete2, by = c("subid", "Time"))
-  head(dissdata_long3)
-  dissdata_long4 <- inner_join(dissdata_long3, lon_complete2, by = c("subid", "Time"))
-  head(dissdata_long4)
-  dissdata_long5 <- inner_join(dissdata_long4, emocap_complete2, by = c("subid", "Time"))
-  head(dissdata_long5)
-  dissdata_long6 <- inner_join(dissdata_long5, vit_complete2, by = c("subid", "Time"))
-  head(dissdata_long6)
-  dissdata_long6$Intervention <- df_complete$Intervention
-  head(dissdata_long6)
-  summary(dissdata_long6)
-  str(dissdata_long6)
-  #Dummy Coding Intervention
-  dissdata_long6$Intervention <- gsub("0", "1", dissdata_long6$Intervention)
-  dissdata_long6$Intervention <- gsub("1", "0", dissdata_long6$Intervention)
-  summary(dissdata_long6$Intervention)
-  
-  #Reordering intervention
-  df <- dissdata_long6[, c(1, 10, 2, 3, 4, 5, 6, 7, 8, 9)]
-  head(df)
-  dissdata_complete <- df
-  head(dissdata_complete)
-  str(dissdata_complete)
-  write.csv(dissdata_complete, "dissdata_complete.csv")
-  
-  #Changing data type
-  dissdata_long7 <- lapply(dissdata_long6[,c(3:10)], as.character)
-  str(dissdata_long7)
-  summary(dissdata_long7)
-  dissdata_long7 <- lapply(dissdata_long7[], as.numeric)
-  str(dissdata_long7)
-  head(dissdata_long7)
-  class(dissdata_long7)
-  summary(dissdata_long7)
-  dissdata_long8 <- as.data.frame(dissdata_long7)
-  str(dissdata_long8)
-  head(dissdata_long8)
-  summary(dissdata_long8)
-  
-  dissdata_long8$subid <- dissdata_complete$subid
-  dissdata_long8$Time <- dissdata_complete$Time
-  head(dissdata_long8)
-  dissdata_complete3 <- dissdata_long8[, c(9, 8, 10, 1, 2, 3, 4, 5, 6, 7)]
-  head(dissdata_complete3)
-  library(readr)
-  setwd("~/Desktop/Dissertation")
-  dissdata_complete <- read_csv("dissdata_complete.csv")
-  write.csv(dissdata_complete3, "dissdata_complete.csv")
-  dissdata_complete <- dissdata_complete3
-  
-  #Inspectigin the distribution of the original and imputed data
-  head(dissdata_complete)
-  class(dissdata_complete)
   
   #Using GGplot to look at individual trajectories over time
   library(nlme)
@@ -1016,15 +425,7 @@ old_code <- function() {
   library(lme4)
   str(dissdata_complete)
   dissdata_complete$Time <- as.numeric(dissdata_complete$Time)
-  
-  #adding in control vars to dataset
-  
-  dissdata_complete
-  
-  dissdata_complete$timeatMara <- dissdata$timeatMara
-  dissdata_complete$reasonforMara <- dissdata$reasonforMara
-  dissdata_complete$familyclose <- dissdata$familyclose
-  dissdata_complete$familytalk <- dissdata$familytalk
+
   
   #Mediation with Bootstrapping - Erin Buchanan's YouTube Channel
   #Data screening 
@@ -1123,6 +524,7 @@ stress_df <- {}
 stress_all_df <- {}
 quality_comm_df <- {}
 vitality_df <- {}
+control_df <- {}
 
 load_data <- function() {
   dissdata <- read.csv("dissdata_filledin.csv")
@@ -1195,6 +597,12 @@ load_data <- function() {
   # qualcomm
   quality_comm_df <<- data.frame(keys_df)
   quality_comm_df <<- load_columns(dissdata, quality_comm_df, 'qualcomm', 'quality_comm', 7)
+  
+  control_df <<- data.frame(keys_df)
+  control_df$time_at_mara <<- dissdata$timeatMara
+  control_df$reasons_for_mara <<- dissdata$reasonforMara
+  control_df$family_close <<- dissdata$familyclose
+  control_df$family_talk <<- dissdata$familytalk
 }
 
 load_data()
@@ -1226,18 +634,54 @@ comm_orientation_all_df <- make_long(comm_orientation_all_df, 'comm_orientation_
 stress_all_df <- make_wide(stress_all_df, 'stress_all')
 stress_all_df <- impute(stress_all_df)
 stress_all_df <- make_long(stress_all_df, 'stress_all')
-head(stress_all_df)
 
 social_activity_all_df <- make_wide(social_activity_all_df, 'social_activity_all')
 social_activity_all_df <- impute(social_activity_all_df)
 social_activity_all_df <- make_long(social_activity_all_df, 'social_activity_all')
 
-joined_df <- inner_join(x = vitality_df, y = log_depression_df, by = c("sub_id", "intervention", "week"))
-joined_df <- inner_join(x = joined_df, y = rec_loneliness_avg_df, by = c("sub_id", "intervention", "week"))
-joined_df <- inner_join(x = joined_df, y = log_loneliness_avg_df, by = c("sub_id", "intervention", "week"))
-joined_df <- inner_join(x = joined_df, y = loneliness_all_df, by = c("sub_id", "intervention", "week"))
-joined_df <- inner_join(x = joined_df, y = comm_orientation_all_df, by = c("sub_id", "intervention", "week"))
-joined_df <- inner_join(x = joined_df, y = stress_all_df, by = c("sub_id", "intervention", "week"))
-joined_df <- inner_join(x = joined_df, y = social_activity_all_df, by = c("sub_id", "intervention", "week"))
-head(joined_df)
-print(joined_df)
+joined_df <- inner_join(x = vitality_df, y = log_depression_df, by = c('sub_id', 'intervention', 'week'))
+joined_df <- inner_join(x = joined_df, y = rec_loneliness_avg_df, by = c('sub_id', 'intervention', 'week'))
+joined_df <- inner_join(x = joined_df, y = log_loneliness_avg_df, by = c('sub_id', 'intervention', 'week'))
+joined_df <- inner_join(x = joined_df, y = loneliness_all_df, by = c('sub_id', 'intervention', 'week'))
+joined_df <- inner_join(x = joined_df, y = comm_orientation_all_df, by = c('sub_id', 'intervention', 'week'))
+joined_df <- inner_join(x = joined_df, y = stress_all_df, by = c('sub_id', 'intervention', 'week'))
+joined_df <- inner_join(x = joined_df, y = social_activity_all_df, by = c('sub_id', 'intervention', 'week'))
+
+write.csv(joined_df, 'dissdata_complete.csv')
+
+#Removing people with only one time point
+cleaned_df <- subset(joined_df, sub_id != 'A4' & sub_id != 'B5' & sub_id != 'F1')
+
+cleaned_control_df <- subset(control_df, week == 1)
+cleaned_control_df <- within(cleaned_control_df, rm('week'))
+head(cleaned_control_df)
+
+#adding in control vars to dataset
+my_df <- inner_join(x = cleaned_control_df, y = cleaned_df, by = c('sub_id', 'intervention'))
+
+#Dummy Coding Intervention
+my_df$intervention <- gsub('I', '1', my_df$intervention)
+my_df$intervention <- gsub('C', '0', my_df$intervention)
+head(my_df)
+
+#Fitting the unconditional models, with no predictors besides the time variable, Week, 
+#which is an important first step when exploring the data and gives insight into the data to be explored
+library(lme4)
+#intercept is mean of the Time var - quality communication 
+random_intercept_social_activity <- lmer(social_activity_all ~ 1 + week + (1|sub_id), data = my_df)
+summary(random_intercept_social_activity)
+
+random_intercept_comm_orientation_all <- lmer(comm_orientation_all ~ 1 + week + (1|sub_id), data = my_df)
+summary(random_intercept_comm_orientation_all)
+
+random_intercept_stress_all <- lmer(stress_all ~ 1 + week + (1|sub_id), data = my_df)
+summary(random_intercept_stress_all)
+
+random_intercept_loneliness_all <- lmer(rec_loneliness_avg ~ 1 + week + (1|sub_id), data = my_df)
+summary(random_intercept_loneliness_all)
+
+random_intercept_depression_all <- lmer(log_depression ~ 1 + week + (1|sub_id), data = my_df)
+summary(random_intercept_depression_all)
+
+random_intercept_loneliness_all <- lmer(rec_loneliness_avg ~ 1 + week + (1|sub_id), data = my_df)
+summary(random_intercept_loneliness_all)
