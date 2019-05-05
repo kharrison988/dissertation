@@ -23,6 +23,12 @@
 #are no more similar than observations from different clusters.  Go ahead and use a simpler 
 #analysis technique.
 
+library(dplyr)
+library(tidyr)
+library(corrr)
+
+setwd("~/Desktop/Dissertation")
+
 load_from_spss <- function() {
   setwd("~/Desktop/Dissertation")
   library(haven)
@@ -1043,36 +1049,104 @@ isolate <- function(input_data, input_column_name) {
   return(isolated_data)
 }
 
+#Will proceed with imputation
+#flipping from long to wide
 make_wide <- function(input_data) {
-  #Will proceed with imputation
-  #flipping from long to wide
-  library(dplyr)
-  library(tidyr)
-  library(corrr)
   vitality_df <- as.data.frame(vitality_df)
+  
   vitality_wide <- vitality_df %>%
     mutate(Time = paste0('TimeVit_', Time)) %>%
     spread(Time, vitality) %>%
     select(subid, Intervention, TimeVit_1, TimeVit_2, TimeVit_3, TimeVit_4, everything())
-  str(vitality_wide)
   
   vitality_wide2 <- lapply(vitality_wide[,c(3:6)], as.character)
-  str(vitality_wide2)
   vitality_wide3 <- lapply(vitality_wide2[], as.numeric)
-  str(vitality_wide3)
   vitality_wide2 <- vitality_wide3
   
   vitality_wide$TimeVit_1 <- vitality_wide2$TimeVit_1
   vitality_wide$TimeVit_2 <- vitality_wide2$TimeVit_2
   vitality_wide$TimeVit_3 <- vitality_wide2$TimeVit_3
   vitality_wide$TimeVit_4 <- vitality_wide2$TimeVit_4
-  str(vitality_wide)
-  class(vitality_wide)
   
   return(as.data.frame(vitality_wide2))
 }
 
-dissdata <- read.csv("dissdata_filledin.csv")
+
+load_columns <- function(src_df, dest_df, src_col_name, dest_col_name, limit) {
+  for (i in 1:limit) {
+    src <- paste(dest_col_name, '_', i, sep='')
+    dest <- paste(src_col_name, i, sep='')
+    
+    dest_df[src] <- src_df[dest]
+  }
+  
+  return(dest_df)
+}
+
+relationship_df <- {}
+tech_experience_df <- {}
+social_activity_df <- {}
+comm_orientation_df <- {}
+rec_loneliness_avg_df <- {}
+log_depression_df <- {}
+stress_df <- {}
+quality_comm_df <- {}
+vitality_df <- {}
+
+load_data <- function() {
+  dissdata <- read.csv("dissdata_filledin.csv")
+
+  keys_df <- data.frame(
+    'week' = dissdata$Week,
+    'sub_id' = dissdata$subid,
+    'intervention' = dissdata$Intervention
+  )
+  
+  relationship_df <<- data.frame(keys_df)
+  relationship_df$marital_status <<- dissdata$maritalstatus
+  relationship_df$family_talk <<- dissdata$familytalk
+  relationship_df$family_close <<- dissdata$familyclose
+  relationship_df$friends_maravilla <<- dissdata$friendsMara
+  relationship_df$staff_maravilla <<- dissdata$staffMara
+  relationship_df$relationship_status <<- dissdata$relationstatus
+  relationship_df$romantic_partner_live <<- dissdata$rompartlive
+  relationship_df$romantic_partner_care <<- dissdata$rompartcare
+  relationship_df$group_know_well <<- dissdata$groupknowwell
+  relationship_df$group_stranger <<- dissdata$groupstranger
+  
+  tech_experience_df <<- data.frame(keys_df)
+  tech_experience_df <<- load_columns(dissdata, tech_experience_df, 'techexp', 'tech_experience', 5)
+ 
+  # socialactivity aka socialengagement
+  social_activity_df <<- data.frame(keys_df)
+  social_activity_df <<- load_columns(dissdata, social_activity_df, 'socialactivity', 'social_activity', 4)
+  
+  # communalorientation
+  comm_orientation_df <<- data.frame(keys_df)
+  comm_orientation_df <<- load_columns(dissdata, comm_orientation_df, 'communaloriet', 'comm_orientation', 5)
+  
+  # recloneliness_avg
+  rec_loneliness_avg_df <<- data.frame(keys_df)
+  rec_loneliness_avg_df$rec_loneliness_avg <<- dissdata$recloneliness_avg
+  
+  # logdepression
+  log_depression_df <<- data.frame(keys_df)
+  log_depression_df$log_depression <<- dissdata$logdepression
+  
+  # stress
+  stress_df <<- data.frame(keys_df)
+  stress_df <<- load_columns(dissdata, stress_df, 'stress', 'stress', 4)
+  
+  # qualcomm
+  quality_comm_df <<- data.frame(keys_df)
+  quality_comm_df <<- load_columns(dissdata, quality_comm_df, 'qualcomm', 'quality_comm', 7)
+  
+  # vitality
+  vitality_df <<- data.frame(keys_df)
+  vitality_df <<- load_columns(dissdata, vitality_df, 'vitality', 'vitality', 7)
+}
+
+load_data()
 
 #First, need to isolate key vars and make them wide
 #Vitality
@@ -1096,15 +1170,4 @@ dissdata <- read.csv("dissdata_filledin.csv")
 #    'emotionalcap' = emotionalcap
 #  )
 
-dissdata$lonelinessall
-
-isolated_data <- isolate(dissdata, 'vitality_all')
-head(isolated_data)
-
-isolated_data <- isolate(dissdata, 'recloneliness_avg')
-head(isolated_data)
-
-#isolated_data <- isolate(dissdata, 'emotionalcap')
-#head(isolated_data)
-
-#make_wide(dissdata)
+head(vitality_df)
