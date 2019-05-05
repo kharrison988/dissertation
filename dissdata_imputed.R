@@ -1020,7 +1020,6 @@ old_code <- function() {
   #adding in control vars to dataset
   
   dissdata_complete
-  new_dissdata <- dissdata_complete[-c()]
   
   dissdata_complete$timeatMara <- dissdata$timeatMara
   dissdata_complete$reasonforMara <- dissdata$reasonforMara
@@ -1041,20 +1040,18 @@ old_code <- function() {
 #Will proceed with imputation
 #flipping from long to wide
 make_wide <- function(input_df, col_name) {
-  print(head(input_df))
+  week_prefix <- paste0('week_', col_name, '_')
+  
   wide_df <- input_df %>%
-    mutate(week = paste0('week_', col_name, '_', week)) %>%
-    spread(week, vitality_all) %>%
-    select(sub_id, intervention, week_vitality_1, week_vitality_2, week_vitality_3, week_vitality_4, everything())
-  
-#  vitality_wide2 <- lapply(vitality_wide[,c(3:6)], as.character)
-#  vitality_wide3 <- lapply(vitality_wide2[], as.numeric)
-#  vitality_wide2 <- vitality_wide3
-  
-#  vitality_wide$TimeVit_1 <- vitality_wide2$TimeVit_1
-#  vitality_wide$TimeVit_2 <- vitality_wide2$TimeVit_2
-#  vitality_wide$TimeVit_3 <- vitality_wide2$TimeVit_3
-#  vitality_wide$TimeVit_4 <- vitality_wide2$TimeVit_4
+    mutate(week = paste0(week_prefix, week)) %>%
+    spread(week, col_name) %>%
+    select(sub_id,
+           intervention,
+           paste0(week_prefix, '1'),
+           paste0(week_prefix, '2'),
+           paste0(week_prefix, '3'),
+           paste0(week_prefix, '4'),
+           everything())
   
   return(wide_df)
 }
@@ -1071,11 +1068,26 @@ load_columns <- function(src_df, dest_df, src_col_name, dest_col_name, limit) {
   return(dest_df)
 }
 
+impute <- function(input_df, col_name) {
+  # Only get the weeks to impute
+  imputed_df <- mice(input_df[,c(3,4,5,6)], m = 1, meth = "pmm")
+  
+  #Diagnostic checking
+  summary(imputed_df)
+  # FIXME: Parameterize this
+  #print(xyplot(imputed_df, week_comm_orientation_all_2 ~ week_comm_orientation_all_3, pch = 18, cex = 1))
+  print(densityplot(imputed_df))
+  print(stripplot(imputed_df, pch = 20, cex = 1.2))
+  
+  return(complete(imputed_df))
+}
+
 relationship_df <- {}
 tech_experience_df <- {}
 social_activity_df <- {}
 comm_orientation_df <- {}
 rec_loneliness_avg_df <- {}
+loneliness_all_df <- {}
 log_depression_df <- {}
 stress_df <- {}
 quality_comm_df <- {}
@@ -1102,52 +1114,78 @@ load_data <- function() {
   relationship_df$group_know_well <<- dissdata$groupknowwell
   relationship_df$group_stranger <<- dissdata$groupstranger
   
-  tech_experience_df <<- data.frame(keys_df)
-  tech_experience_df <<- load_columns(dissdata, tech_experience_df, 'techexp', 'tech_experience', 5)
- 
   # socialactivity aka socialengagement
   social_activity_df <<- data.frame(keys_df)
   social_activity_df <<- load_columns(dissdata, social_activity_df, 'socialactivity', 'social_activity', 4)
   
   # communalorientation
   comm_orientation_df <<- data.frame(keys_df)
-  comm_orientation_df <<- load_columns(dissdata, comm_orientation_df, 'communaloriet', 'comm_orientation', 5)
+  comm_orientation_df$comm_orientation_all <<- dissdata$communalorient_all
+  # TODO: Find mean of this
+  #comm_orientation_df <<- load_columns(dissdata, comm_orientation_df, 'communaloriet', 'comm_orientation', 5)
   
   # recloneliness_avg
   rec_loneliness_avg_df <<- data.frame(keys_df)
   rec_loneliness_avg_df$rec_loneliness_avg <<- dissdata$recloneliness_avg
+ 
+  log_loneliness_avg_df <<- data.frame(keys_df)
+  log_loneliness_avg_df$log_loneliness_avg <<- dissdata$logloneliness_avg
+  
+  loneliness_all_df <<- data.frame(keys_df)
+  loneliness_all_df$loneliness_all <<- dissdata$lonelinessall
   
   # logdepression
   log_depression_df <<- data.frame(keys_df)
   log_depression_df$log_depression <<- dissdata$logdepression
   
   # stress
+  stress_all <-colMeans(dissdata[,c("stress1":"stress4")])
+  
+  print(head(stress_all))
+  #dissdata$stress_all <- dissdata$stress
   stress_df <<- data.frame(keys_df)
   stress_df <<- load_columns(dissdata, stress_df, 'stress', 'stress', 4)
+  
+  # vitality
+  vitality_df <<- data.frame(keys_df)
+  vitality_df$vitality <<- dissdata$vitality_all
+  # TODO: Find mean of this
+  #vitality_df <<- load_columns(dissdata, vitality_df, 'vitality', 'vitality', 7)
+  
+  tech_experience_df <<- data.frame(keys_df)
+  tech_experience_df <<- load_columns(dissdata, tech_experience_df, 'techexp', 'tech_experience', 5)
   
   # qualcomm
   quality_comm_df <<- data.frame(keys_df)
   quality_comm_df <<- load_columns(dissdata, quality_comm_df, 'qualcomm', 'quality_comm', 7)
-  
-  # vitality
-  vitality_df <<- data.frame(keys_df)
-  vitality_df$vitality_all <<- dissdata$vitality_all
-  #vitality_df <<- load_columns(dissdata, vitality_df, 'vitality', 'vitality', 7)
 }
 
 load_data()
 
-head(vitality_df)
-vitality_df <- make_wide(vitality_df, 'vitality')
+#vitality_df <- make_wide(vitality_df, 'vitality')
+#vitality_df <- impute(vitality_df, 'vitality')
+#head(vitality_df)
 
-vitality_imputed <- mice(vitality_df[,c(3,4,5,6)], m = 1, meth = "pmm")
-summary(vitality_imputed)
+#log_depression_df <- make_wide(log_depression_df, 'log_depression')
+#log_depression_df <- impute(log_depression_df, 'log_depression')
+#head(log_depression_df)
 
-#Diagnostic checking
-xyplot(vitality_imputed, week_vitality_2 ~ week_vitality_3, pch = 18, cex = 1)
-densityplot(vitality_imputed)
-stripplot(vitality_imputed, pch = 20, cex = 1.2)
+#rec_loneliness_avg_df <- make_wide(rec_loneliness_avg_df, 'rec_loneliness_avg')
+#rec_loneliness_avg_df <- impute(rec_loneliness_avg_df, 'rec_loneliness_avg')
+#head(rec_loneliness_avg_df)
 
-#Complete
-vitality_complete <- complete(vitality_imputed)
-head(vitality_complete)
+#log_loneliness_avg_df <- make_wide(log_loneliness_avg_df, 'log_loneliness_avg')
+#log_loneliness_avg_df <- impute(log_loneliness_avg_df, 'log_loneliness_avg')
+#head(log_loneliness_avg_df)
+
+#loneliness_all_df <- make_wide(loneliness_all_df, 'loneliness_all')
+#loneliness_all_df <- impute(loneliness_all_df, 'loneliness_all')
+#head(loneliness_all_df)
+
+#comm_orientation_df <- make_wide(comm_orientation_df, 'comm_orientation_all')
+#comm_orientation_df <- impute(comm_orientation_df, 'comm_orientation_all')
+#head(comm_orientation_df)
+
+comm_orientation_df <- make_wide(comm_orientation_df, 'comm_orientation_all')
+comm_orientation_df <- impute(comm_orientation_df, 'comm_orientation_all')
+head(comm_orientation_df)
