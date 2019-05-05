@@ -1056,6 +1056,24 @@ make_wide <- function(input_df, col_name) {
   return(wide_df)
 }
 
+make_long <- function(input_df, col_name) {
+  week_prefix <- paste0('week_', col_name, '_')
+  
+  long_df <- gather(input_df,
+                    key = 'week',
+                    value = value_name,
+                    paste0(week_prefix, '1'):paste0(week_prefix, '4'))
+  names(long_df)[names(long_df) == 'value_name'] <- col_name
+  
+  long_df$week <- gsub(paste0(week_prefix, '1'), '1', long_df$week)
+  long_df$week <- gsub(paste0(week_prefix, '2'), '2', long_df$week)
+  long_df$week <- gsub(paste0(week_prefix, '3'), '3', long_df$week)
+  long_df$week <- gsub(paste0(week_prefix, '4'), '4', long_df$week)
+  
+  long_df <- long_df %>% arrange(sub_id)
+  
+  return(long_df)
+}
 
 load_columns <- function(src_df, dest_df, src_col_name, dest_col_name, limit) {
   for (i in 1:limit) {
@@ -1078,15 +1096,26 @@ impute <- function(input_df) {
   #print(xyplot(imputed_df, week_comm_orientation_all_2 ~ week_comm_orientation_all_3, pch = 18, cex = 1))
   print(densityplot(imputed_df))
   print(stripplot(imputed_df, pch = 20, cex = 1.2))
+ 
+  imputed_df <- complete(imputed_df)
+ 
+  # Add back the keys that were removed for imputation 
+  imputed_df$sub_id <- input_df$sub_id
+  imputed_df$intervention <- input_df$intervention
+  imputed_df <- imputed_df[, c(5, 6, 1, 2, 3, 4)]
   
-  return(complete(imputed_df))
+  return(imputed_df)
+}
+
+impute_all <- function() {
 }
 
 relationship_df <- {}
 tech_experience_df <- {}
 social_activity_df <- {}
 social_activity_all_df <- {}
-comm_orientation_df <- {}
+#comm_orientation_df <- {}
+comm_orientation_all_df <- {}
 rec_loneliness_avg_df <- {}
 loneliness_all_df <- {}
 log_depression_df <- {}
@@ -1126,8 +1155,8 @@ load_data <- function() {
   social_activity_all_df$social_activity_all <<- rowMeans(social_activity_rows)
   
   # communalorientation
-  comm_orientation_df <<- data.frame(keys_df)
-  comm_orientation_df$comm_orientation_all <<- dissdata$communalorient_all
+  comm_orientation_all_df <<- data.frame(keys_df)
+  comm_orientation_all_df$comm_orientation_all <<- dissdata$communalorient_all
   # TODO: Find mean of this
   #comm_orientation_df <<- load_columns(dissdata, comm_orientation_df, 'communaloriet', 'comm_orientation', 5)
   
@@ -1152,6 +1181,8 @@ load_data <- function() {
   stress_rows <- as.data.frame.list(stress_df[, c(var_start_index:ncol(stress_df))])
   stress_all_df$stress_all <<- rowMeans(stress_rows)
   
+  print(head(stress_all_df))
+  
   # vitality
   vitality_df <<- data.frame(keys_df)
   vitality_df$vitality <<- dissdata$vitality_all
@@ -1170,32 +1201,43 @@ load_data()
 
 vitality_df <- make_wide(vitality_df, 'vitality')
 vitality_df <- impute(vitality_df)
-head(vitality_df)
+vitality_df <- make_long(vitality_df, 'vitality')
 
 log_depression_df <- make_wide(log_depression_df, 'log_depression')
 log_depression_df <- impute(log_depression_df)
-head(log_depression_df)
+log_depression_df <- make_long(log_depression_df, 'log_depression')
 
 rec_loneliness_avg_df <- make_wide(rec_loneliness_avg_df, 'rec_loneliness_avg')
 rec_loneliness_avg_df <- impute(rec_loneliness_avg_df)
-head(rec_loneliness_avg_df)
+rec_loneliness_avg_df <- make_long(rec_loneliness_avg_df, 'rec_loneliness_avg')
 
 log_loneliness_avg_df <- make_wide(log_loneliness_avg_df, 'log_loneliness_avg')
 log_loneliness_avg_df <- impute(log_loneliness_avg_df)
-head(log_loneliness_avg_df)
+log_loneliness_avg_df <- make_long(log_loneliness_avg_df, 'log_loneliness_avg')
 
 loneliness_all_df <- make_wide(loneliness_all_df, 'loneliness_all')
 loneliness_all_df <- impute(loneliness_all_df)
-head(loneliness_all_df)
+loneliness_all_df <- make_long(loneliness_all_df, 'loneliness_all')
 
-comm_orientation_df <- make_wide(comm_orientation_df, 'comm_orientation_all')
-comm_orientation_df <- impute(comm_orientation_df)
-head(comm_orientation_df)
+comm_orientation_all_df <- make_wide(comm_orientation_all_df, 'comm_orientation_all')
+comm_orientation_all_df <- impute(comm_orientation_all_df)
+comm_orientation_all_df <- make_long(comm_orientation_all_df, 'comm_orientation_all')
 
 stress_all_df <- make_wide(stress_all_df, 'stress_all')
 stress_all_df <- impute(stress_all_df)
+stress_all_df <- make_long(stress_all_df, 'stress_all')
 head(stress_all_df)
 
 social_activity_all_df <- make_wide(social_activity_all_df, 'social_activity_all')
 social_activity_all_df <- impute(social_activity_all_df)
-head(social_activity_all_df)
+social_activity_all_df <- make_long(social_activity_all_df, 'social_activity_all')
+
+joined_df <- inner_join(x = vitality_df, y = log_depression_df, by = c("sub_id", "intervention", "week"))
+joined_df <- inner_join(x = joined_df, y = rec_loneliness_avg_df, by = c("sub_id", "intervention", "week"))
+joined_df <- inner_join(x = joined_df, y = log_loneliness_avg_df, by = c("sub_id", "intervention", "week"))
+joined_df <- inner_join(x = joined_df, y = loneliness_all_df, by = c("sub_id", "intervention", "week"))
+joined_df <- inner_join(x = joined_df, y = comm_orientation_all_df, by = c("sub_id", "intervention", "week"))
+joined_df <- inner_join(x = joined_df, y = stress_all_df, by = c("sub_id", "intervention", "week"))
+joined_df <- inner_join(x = joined_df, y = social_activity_all_df, by = c("sub_id", "intervention", "week"))
+head(joined_df)
+print(joined_df)
