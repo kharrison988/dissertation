@@ -1068,9 +1068,9 @@ load_columns <- function(src_df, dest_df, src_col_name, dest_col_name, limit) {
   return(dest_df)
 }
 
-impute <- function(input_df, col_name) {
+impute <- function(input_df) {
   # Only get the weeks to impute
-  imputed_df <- mice(input_df[,c(3,4,5,6)], m = 1, meth = "pmm")
+  imputed_df <- mice(input_df[,c(3, 4, 5, 6)], m = 1, meth = "pmm")
   
   #Diagnostic checking
   summary(imputed_df)
@@ -1085,11 +1085,13 @@ impute <- function(input_df, col_name) {
 relationship_df <- {}
 tech_experience_df <- {}
 social_activity_df <- {}
+social_activity_all_df <- {}
 comm_orientation_df <- {}
 rec_loneliness_avg_df <- {}
 loneliness_all_df <- {}
 log_depression_df <- {}
 stress_df <- {}
+stress_all_df <- {}
 quality_comm_df <- {}
 vitality_df <- {}
 
@@ -1101,6 +1103,8 @@ load_data <- function() {
     'sub_id' = dissdata$subid,
     'intervention' = dissdata$Intervention
   )
+  
+  var_start_index <- ncol(keys_df) + 1
   
   relationship_df <<- data.frame(keys_df)
   relationship_df$marital_status <<- dissdata$maritalstatus
@@ -1117,6 +1121,9 @@ load_data <- function() {
   # socialactivity aka socialengagement
   social_activity_df <<- data.frame(keys_df)
   social_activity_df <<- load_columns(dissdata, social_activity_df, 'socialactivity', 'social_activity', 4)
+  social_activity_all_df <<- data.frame(keys_df)
+  social_activity_rows <- as.data.frame.list(social_activity_df[, c(var_start_index:ncol(social_activity_df))])
+  social_activity_all_df$social_activity_all <<- rowMeans(social_activity_rows)
   
   # communalorientation
   comm_orientation_df <<- data.frame(keys_df)
@@ -1139,12 +1146,11 @@ load_data <- function() {
   log_depression_df$log_depression <<- dissdata$logdepression
   
   # stress
-  stress_all <-colMeans(dissdata[,c("stress1":"stress4")])
-  
-  print(head(stress_all))
-  #dissdata$stress_all <- dissdata$stress
   stress_df <<- data.frame(keys_df)
   stress_df <<- load_columns(dissdata, stress_df, 'stress', 'stress', 4)
+  stress_all_df <<- data.frame(keys_df)
+  stress_rows <- as.data.frame.list(stress_df[, c(var_start_index:ncol(stress_df))])
+  stress_all_df$stress_all <<- rowMeans(stress_rows)
   
   # vitality
   vitality_df <<- data.frame(keys_df)
@@ -1162,30 +1168,34 @@ load_data <- function() {
 
 load_data()
 
-#vitality_df <- make_wide(vitality_df, 'vitality')
-#vitality_df <- impute(vitality_df, 'vitality')
-#head(vitality_df)
+vitality_df <- make_wide(vitality_df, 'vitality')
+vitality_df <- impute(vitality_df)
+head(vitality_df)
 
-#log_depression_df <- make_wide(log_depression_df, 'log_depression')
-#log_depression_df <- impute(log_depression_df, 'log_depression')
-#head(log_depression_df)
+log_depression_df <- make_wide(log_depression_df, 'log_depression')
+log_depression_df <- impute(log_depression_df)
+head(log_depression_df)
 
-#rec_loneliness_avg_df <- make_wide(rec_loneliness_avg_df, 'rec_loneliness_avg')
-#rec_loneliness_avg_df <- impute(rec_loneliness_avg_df, 'rec_loneliness_avg')
-#head(rec_loneliness_avg_df)
+rec_loneliness_avg_df <- make_wide(rec_loneliness_avg_df, 'rec_loneliness_avg')
+rec_loneliness_avg_df <- impute(rec_loneliness_avg_df)
+head(rec_loneliness_avg_df)
 
-#log_loneliness_avg_df <- make_wide(log_loneliness_avg_df, 'log_loneliness_avg')
-#log_loneliness_avg_df <- impute(log_loneliness_avg_df, 'log_loneliness_avg')
-#head(log_loneliness_avg_df)
+log_loneliness_avg_df <- make_wide(log_loneliness_avg_df, 'log_loneliness_avg')
+log_loneliness_avg_df <- impute(log_loneliness_avg_df)
+head(log_loneliness_avg_df)
 
-#loneliness_all_df <- make_wide(loneliness_all_df, 'loneliness_all')
-#loneliness_all_df <- impute(loneliness_all_df, 'loneliness_all')
-#head(loneliness_all_df)
-
-#comm_orientation_df <- make_wide(comm_orientation_df, 'comm_orientation_all')
-#comm_orientation_df <- impute(comm_orientation_df, 'comm_orientation_all')
-#head(comm_orientation_df)
+loneliness_all_df <- make_wide(loneliness_all_df, 'loneliness_all')
+loneliness_all_df <- impute(loneliness_all_df)
+head(loneliness_all_df)
 
 comm_orientation_df <- make_wide(comm_orientation_df, 'comm_orientation_all')
-comm_orientation_df <- impute(comm_orientation_df, 'comm_orientation_all')
+comm_orientation_df <- impute(comm_orientation_df)
 head(comm_orientation_df)
+
+stress_all_df <- make_wide(stress_all_df, 'stress_all')
+stress_all_df <- impute(stress_all_df)
+head(stress_all_df)
+
+social_activity_all_df <- make_wide(social_activity_all_df, 'social_activity_all')
+social_activity_all_df <- impute(social_activity_all_df)
+head(social_activity_all_df)
