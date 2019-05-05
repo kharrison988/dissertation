@@ -26,6 +26,7 @@
 library(dplyr)
 library(tidyr)
 library(corrr)
+library(mice)
 
 setwd("~/Desktop/Dissertation")
 
@@ -242,7 +243,7 @@ missing_dataAnalysis <- function() {
   
 }
 
-everything <- function() {
+old_code <- function() {
   #Imputing the data - now that all of the data are isolated, made wide, and joined together
   #van Buuren S, Groothuis-Oudshoorn K (2011). “mice: Multivariate Imputation by Chained Equations in R.” 
   #Journal of Statistical Software, 45(3), 1-67. https://www.jstatsoft.org/v45/i03/.
@@ -252,7 +253,7 @@ everything <- function() {
   #2 step process where missing values are first imputed and then a covariance matrix
   #and mean vector are estimated. This repeats until the difference between the covariance
   #matricies from adjacent iterations differs by a trivial amount
-  library(mice)
+
   vitality_imp <- mice(vitality_wide_df, m = 1, meth = "pmm")
   summary(vitality_imp)
   
@@ -1037,47 +1038,34 @@ everything <- function() {
   head(dissdata_complete)
 }
 
-isolate <- function(input_data, input_column_name) {
-  
-  isolated_data <- data.frame(
-    'sub_id' = input_data$subid,
-    'intervention' = input_data$Intervention,
-    'week' = input_data$Week,
-    input_column_name = input_data[input_column_name]
-  )
-  
-  return(isolated_data)
-}
-
 #Will proceed with imputation
 #flipping from long to wide
-make_wide <- function(input_data) {
-  vitality_df <- as.data.frame(vitality_df)
+make_wide <- function(input_df, col_name) {
+  print(head(input_df))
+  wide_df <- input_df %>%
+    mutate(week = paste0('week_', col_name, '_', week)) %>%
+    spread(week, vitality_all) %>%
+    select(sub_id, intervention, week_vitality_1, week_vitality_2, week_vitality_3, week_vitality_4, everything())
   
-  vitality_wide <- vitality_df %>%
-    mutate(Time = paste0('TimeVit_', Time)) %>%
-    spread(Time, vitality) %>%
-    select(subid, Intervention, TimeVit_1, TimeVit_2, TimeVit_3, TimeVit_4, everything())
+#  vitality_wide2 <- lapply(vitality_wide[,c(3:6)], as.character)
+#  vitality_wide3 <- lapply(vitality_wide2[], as.numeric)
+#  vitality_wide2 <- vitality_wide3
   
-  vitality_wide2 <- lapply(vitality_wide[,c(3:6)], as.character)
-  vitality_wide3 <- lapply(vitality_wide2[], as.numeric)
-  vitality_wide2 <- vitality_wide3
+#  vitality_wide$TimeVit_1 <- vitality_wide2$TimeVit_1
+#  vitality_wide$TimeVit_2 <- vitality_wide2$TimeVit_2
+#  vitality_wide$TimeVit_3 <- vitality_wide2$TimeVit_3
+#  vitality_wide$TimeVit_4 <- vitality_wide2$TimeVit_4
   
-  vitality_wide$TimeVit_1 <- vitality_wide2$TimeVit_1
-  vitality_wide$TimeVit_2 <- vitality_wide2$TimeVit_2
-  vitality_wide$TimeVit_3 <- vitality_wide2$TimeVit_3
-  vitality_wide$TimeVit_4 <- vitality_wide2$TimeVit_4
-  
-  return(as.data.frame(vitality_wide2))
+  return(wide_df)
 }
 
 
 load_columns <- function(src_df, dest_df, src_col_name, dest_col_name, limit) {
   for (i in 1:limit) {
-    src <- paste(dest_col_name, '_', i, sep='')
-    dest <- paste(src_col_name, i, sep='')
+    src <- paste(src_col_name, i, sep='')
+    dest <- paste(dest_col_name, '_', i, sep='')
     
-    dest_df[src] <- src_df[dest]
+    dest_df[dest] <- src_df[src]
   }
   
   return(dest_df)
@@ -1143,31 +1131,23 @@ load_data <- function() {
   
   # vitality
   vitality_df <<- data.frame(keys_df)
-  vitality_df <<- load_columns(dissdata, vitality_df, 'vitality', 'vitality', 7)
+  vitality_df$vitality_all <<- dissdata$vitality_all
+  #vitality_df <<- load_columns(dissdata, vitality_df, 'vitality', 'vitality', 7)
 }
 
 load_data()
 
-#First, need to isolate key vars and make them wide
-#Vitality
-#diss_time <- c(1, 2, 3, 4)
-#vitality <- round(dissdata$vitality_all, digits = 2)
-#dissdata$subid <- as.character(dissdata$subid)
-#dissdata$subid
-#vitality_df <- cbind(
-#  'subid' = dissdata$subid,
-#  'Intervention' = dissdata$Intervention,
-#  'Time' = diss_time,
-#  'vitality' = vitality
-#)
-#  #Emotional Cap
-#  diss_time <- c(1, 2, 3, 4)
-#  emotionalcap <- round(dissdata$emotionalcap_all, digits = 2)
-#  emotionalcap_df <- cbind(
-#    'subid' = dissdata$subid,
-#    'Intervention' = dissdata$Intervention,
-#    'Time' = diss_time,
-#    'emotionalcap' = emotionalcap
-#  )
-
 head(vitality_df)
+vitality_df <- make_wide(vitality_df, 'vitality')
+
+vitality_imputed <- mice(vitality_df[,c(3,4,5,6)], m = 1, meth = "pmm")
+summary(vitality_imputed)
+
+#Diagnostic checking
+xyplot(vitality_imputed, week_vitality_2 ~ week_vitality_3, pch = 18, cex = 1)
+densityplot(vitality_imputed)
+stripplot(vitality_imputed, pch = 20, cex = 1.2)
+
+#Complete
+vitality_complete <- complete(vitality_imputed)
+head(vitality_complete)
