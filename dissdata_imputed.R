@@ -29,6 +29,8 @@ library(corrr)
 library(mice)
 
 setwd("~/Desktop/Dissertation")
+print(dissdata)
+
 
 load_from_spss <- function() {
   setwd("~/Desktop/Dissertation")
@@ -438,6 +440,11 @@ old_code <- function() {
   head(dissdata_complete)
 }
 
+#find_average <- function(input_df, col_name) {
+ # find_average_col <- paste0(col_name, '1')/ 
+#}
+
+
 #Will proceed with imputation
 #flipping from long to wide
 make_wide <- function(input_df, col_name) {
@@ -505,19 +512,39 @@ impute <- function(input_df) {
   imputed_df$intervention <- input_df$intervention
   imputed_df <- imputed_df[, c(5, 6, 1, 2, 3, 4)]
   
-  #isolating T2-4 
-  take_out_baseline <- function(input_df, col_name) {
-    df_without_base <- data.frame(input_df)
-    var_start_index <- 4
-    df_without_base_rows <- as.data.frame.list(input_df[, c(var_start_index:ncol(input_df))])
-    df_without_base[paste0(col_name, "_avg234")] <- rowMeans(df_without_base_rows)
-    
-    return(df_without_base)
-  }
-  
-  
   return(imputed_df)
 }
+
+#isolating T2-4 
+take_out_baseline <- function(input_df, col_name) {
+  df_without_base <- data.frame(input_df)
+  var_start_index <- 4
+  df_without_base_rows <- as.data.frame.list(input_df[, c(var_start_index:ncol(input_df))])
+  df_without_base[paste0(col_name, "_avg234")] <- rowMeans(df_without_base_rows)
+ 
+  
+  return(df_without_base)
+}
+
+#isolating T1
+baseline_only <- function(input_df, col_name) {
+  df_baseline <- data.frame(input_df)
+  var_index <- 3
+  df_baseline_rows <- as.data.frame.list(input_df[,3])
+  df_baseline[paste0(col_name, "_avgbase")] <- rowMeans(df_baseline_rows)
+  
+  return(df_baseline)
+}
+
+#Adding isolated variables
+#adding_isolated_vars <- function(input_df, col_name) {
+ # isolated_vars <- data.frame(input_df)
+  #var_index_isolated <- 7
+  #df_baseline_rows <- as.data.frame.list(input_df[,7])
+  #input_df$col_name <- isolated_vars[paste0(input_df,"_avg235"$col_name,"avg234")]
+ 
+  #return(isolated_vars) 
+#}
 
 relationship_df <- {}
 tech_experience_df <- {}
@@ -615,44 +642,63 @@ load_data <- function() {
 
 load_data()
 
+
+vitality_row_means <- vitality_df_imputed %>%
+  as.character('week_vitality_1':'week_vitality_7') %>%
+  as.numeric('week_vitality_1':'week_vitality_7') %>%
+  mutate(vitality1_avg = paste0(week_prefix, week)) %>%
+  mutate(row)
+  rowMeans()
+
 vitality_df_wide <- make_wide(vitality_df, 'vitality')
 vitality_df_imputed <- impute(vitality_df_wide)
+head(vitality_df_imputed)
+class(vitality_df_imputed)
+rowMeans(vitality_df_imputed)
 vitality_T234 <- take_out_baseline(vitality_df_imputed, 'vitality')
+vitality_baseline <- baseline_only(vitality_df_imputed, 'vitality')
 vitality_df <- make_long(vitality_df_imputed, 'vitality')
 
 log_depression_df_wide <- make_wide(log_depression_df, 'log_depression')
 log_depression_df_imputed <- impute(log_depression_df_wide)
 depression_T234 <- take_out_baseline(log_depression_df_imputed, 'log_depression')
+depression_baseline <- baseline_only(log_depression_df_imputed, 'log_depression')
 log_depression_df <- make_long(log_depression_df_imputed, 'log_depression')
 
 rec_loneliness_avg_df_wide <- make_wide(rec_loneliness_avg_df, 'rec_loneliness_avg')
 rec_loneliness_avg_df_imputed <- impute(rec_loneliness_avg_df_wide)
 rec_loneliness_T234 <- take_out_baseline(rec_loneliness_avg_df_imputed, 'loneliness')
+rec_loneliness_baseline <- baseline_only(rec_loneliness_avg_df_imputed, 'rec_loneliness_avg')
 rec_loneliness_avg_df <- make_long(rec_loneliness_avg_df_imputed, 'rec_loneliness_avg')
 
 log_loneliness_avg_df_wide <- make_wide(log_loneliness_avg_df, 'log_loneliness_avg')
 log_loneliness_avg_df_imputed <- impute(log_loneliness_avg_df_wide)
-log_loneliness_T234 <- take_out_baseline(log_loneliness_avg_df_imputed, 'log_loneliness_all')
+log_loneliness_T234 <- take_out_baseline(log_loneliness_avg_df_imputed, 'log_loneliness_avg')
+log_loneliness_baseline <- baseline_only(log_loneliness_avg_df_imputed, 'log_loneliness_avg')
 log_loneliness_avg_df <- make_long(log_loneliness_avg_df_imputed, 'log_loneliness_avg')
 
 loneliness_all_df_wide <- make_wide(loneliness_all_df, 'loneliness_all')
 loneliness_all_df_imputed <- impute(loneliness_all_df_wide)
 loneliness_avg_T234 <- take_out_baseline(loneliness_all_df_imputed, 'loneliness_all')
+loneliness_baseline <- baseline_only(loneliness_all_df_imputed, 'loneliness_all')
 loneliness_all_df <- make_long(loneliness_all_df_imputed, 'loneliness_all')
 
 comm_orientation_all_df_wide <- make_wide(comm_orientation_all_df, 'comm_orientation_all')
 comm_orientation_all_df_imputed <- impute(comm_orientation_all_df_wide)
 comm_orientation_T234 <- take_out_baseline(comm_orientation_all_df_imputed, 'comm_orientation_all')
+comm_orientation_baseline <- baseline_only(comm_orientation_all_df_imputed, 'comm_orientation_all')
 comm_orientation_all_df <- make_long(comm_orientation_all_df_imputed, 'comm_orientation_all')
 
 stress_all_df_wide <- make_wide(stress_all_df, 'stress_all')
 stress_all_df_imputed <- impute(stress_all_df_wide)
 stress_T234 <- take_out_baseline(stress_all_df_imputed, 'stress_all')
+stress_baseline <- baseline_only(stress_all_df_imputed, 'stress_all')
 stress_all_df <- make_long(stress_all_df_imputed, 'stress_all')
 
 social_activity_all_df_wide <- make_wide(social_activity_all_df, 'social_activity_all')
 social_activity_all_df_imputed <- impute(social_activity_all_df_wide)
 social_activity_T234 <- take_out_baseline(social_activity_all_df_imputed, 'social_activity_all')
+social_activity_baseline <- baseline_only(social_activity_all_df_imputed, 'social_activity_all')
 social_activity_all_df <- make_long(social_activity_all_df_imputed, 'social_activity_all')
 
 joined_df <- inner_join(x = vitality_df, y = log_depression_df, by = c('sub_id', 'intervention', 'week'))
@@ -663,10 +709,40 @@ joined_df <- inner_join(x = joined_df, y = comm_orientation_all_df, by = c('sub_
 joined_df <- inner_join(x = joined_df, y = stress_all_df, by = c('sub_id', 'intervention', 'week'))
 joined_df <- inner_join(x = joined_df, y = social_activity_all_df, by = c('sub_id', 'intervention', 'week'))
 
+joined_df_with_avgs <- full_join(x = joined_df, y = vitality_T234$vitality_avg234, by = c('sub_id', 'intervention'))
+
+
+joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = depression_T234, by = c('sub_id', 'intervention'))
+joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = rec_loneliness_T234, by = c('sub_id', 'intervention'))
+joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = log_loneliness_T234, by = c('sub_id', 'intervention'))
+joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = loneliness_avg_T234, by = c('sub_id', 'intervention'))
+joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = comm_orientation_T234, by = c('sub_id','intervention'))
+joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = stress_T234, by = c('sub_id','intervention'))
+joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = social_activity_T234, by = c('sub_id','intervention'))
+head(joined_df_with_avgs)
+
+joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = vitality_baseline, by = c('sub_id', 'intervention'))
+joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = depression_baseline, by = c('sub_id', 'intervention'))
+joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = rec_loneliness_baseline, by = c('sub_id', 'intervention'))
+joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = log_loneliness_baseline, by = c('sub_id', 'intervention'))
+joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = loneliness+avg_baseline, by = c('sub_id', 'intervention'))
+joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = comm_orientation_baseline, by = c('sub_id', 'intervention'))
+joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = stress_baseline, by = c('sub_id', 'intervention'))
+joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = social_activity_baseline, by = c('sub_id', 'intervention'))
+
+head(joined_df_with_baseline)
+  
 write.csv(joined_df, 'dissdata_complete.csv')
 
 #Removing people with only one time point
 cleaned_df <- subset(joined_df, sub_id != 'A4' & sub_id != 'B5' & sub_id != 'F1')
+
+#Adding isolated variables
+cleaned_df$vitality_avg234 <- vitality_T234$vitality_avg234
+vitality_T234
+head(dissdata, n = 50)
+vitality_df_wide
+head(cleaned_df)
 
 #Dummy Coding Intervention
 cleaned_df$intervention <- gsub('I', '1', cleaned_df$intervention)
@@ -678,13 +754,6 @@ head(cleaned_control_df)
 
 #adding in control vars to dataset
 my_df <- inner_join(x = cleaned_control_df, y = cleaned_df, by = c('sub_id', 'intervention'))
-
-#Dummy Coding Intervention
-commorient_without_baseline$intervention <- gsub('I', '1', commorient_without_baseline$intervention)
-commorient_without_baseline$intervention <- gsub('C', '0', commorient_without_baseline$intervention)
-
-cleaned_df$CO_woT1 <- commorient_without_baseline$AvgCommT2T3T4
-
 
 #Multilevel mediation with logitudinal data with bootstrapping
 
