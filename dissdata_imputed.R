@@ -505,10 +505,18 @@ impute <- function(input_df) {
   imputed_df$intervention <- input_df$intervention
   imputed_df <- imputed_df[, c(5, 6, 1, 2, 3, 4)]
   
+  #isolating T2-4 
+  take_out_baseline <- function(input_df, col_name) {
+    df_without_base <- data.frame(input_df)
+    var_start_index <- 4
+    df_without_base_rows <- as.data.frame.list(input_df[, c(var_start_index:ncol(input_df))])
+    df_without_base[paste0(col_name, "_avg234")] <- rowMeans(df_without_base_rows)
+    
+    return(df_without_base)
+  }
+  
+  
   return(imputed_df)
-}
-
-impute_all <- function() {
 }
 
 relationship_df <- {}
@@ -565,7 +573,7 @@ load_data <- function() {
   # recloneliness_avg
   rec_loneliness_avg_df <<- data.frame(keys_df)
   rec_loneliness_avg_df$rec_loneliness_avg <<- dissdata$recloneliness_avg
- 
+
   log_loneliness_avg_df <<- data.frame(keys_df)
   log_loneliness_avg_df$log_loneliness_avg <<- dissdata$logloneliness_avg
   
@@ -607,37 +615,45 @@ load_data <- function() {
 
 load_data()
 
-vitality_df <- make_wide(vitality_df, 'vitality')
-vitality_df <- impute(vitality_df)
-vitality_df <- make_long(vitality_df, 'vitality')
+vitality_df_wide <- make_wide(vitality_df, 'vitality')
+vitality_df_imputed <- impute(vitality_df_wide)
+vitality_T234 <- take_out_baseline(vitality_df_imputed, 'vitality')
+vitality_df <- make_long(vitality_df_imputed, 'vitality')
 
-log_depression_df <- make_wide(log_depression_df, 'log_depression')
-log_depression_df <- impute(log_depression_df)
-log_depression_df <- make_long(log_depression_df, 'log_depression')
+log_depression_df_wide <- make_wide(log_depression_df, 'log_depression')
+log_depression_df_imputed <- impute(log_depression_df_wide)
+depression_T234 <- take_out_baseline(log_depression_df_imputed, 'log_depression')
+log_depression_df <- make_long(log_depression_df_imputed, 'log_depression')
 
-rec_loneliness_avg_df <- make_wide(rec_loneliness_avg_df, 'rec_loneliness_avg')
-rec_loneliness_avg_df <- impute(rec_loneliness_avg_df)
-rec_loneliness_avg_df <- make_long(rec_loneliness_avg_df, 'rec_loneliness_avg')
+rec_loneliness_avg_df_wide <- make_wide(rec_loneliness_avg_df, 'rec_loneliness_avg')
+rec_loneliness_avg_df_imputed <- impute(rec_loneliness_avg_df_wide)
+rec_loneliness_T234 <- take_out_baseline(rec_loneliness_avg_df_imputed, 'loneliness')
+rec_loneliness_avg_df <- make_long(rec_loneliness_avg_df_imputed, 'rec_loneliness_avg')
 
-log_loneliness_avg_df <- make_wide(log_loneliness_avg_df, 'log_loneliness_avg')
-log_loneliness_avg_df <- impute(log_loneliness_avg_df)
-log_loneliness_avg_df <- make_long(log_loneliness_avg_df, 'log_loneliness_avg')
+log_loneliness_avg_df_wide <- make_wide(log_loneliness_avg_df, 'log_loneliness_avg')
+log_loneliness_avg_df_imputed <- impute(log_loneliness_avg_df_wide)
+log_loneliness_T234 <- take_out_baseline(log_loneliness_avg_df_imputed, 'log_loneliness_all')
+log_loneliness_avg_df <- make_long(log_loneliness_avg_df_imputed, 'log_loneliness_avg')
 
-loneliness_all_df <- make_wide(loneliness_all_df, 'loneliness_all')
-loneliness_all_df <- impute(loneliness_all_df)
-loneliness_all_df <- make_long(loneliness_all_df, 'loneliness_all')
+loneliness_all_df_wide <- make_wide(loneliness_all_df, 'loneliness_all')
+loneliness_all_df_imputed <- impute(loneliness_all_df_wide)
+loneliness_avg_T234 <- take_out_baseline(loneliness_all_df_imputed, 'loneliness_all')
+loneliness_all_df <- make_long(loneliness_all_df_imputed, 'loneliness_all')
 
-comm_orientation_all_df <- make_wide(comm_orientation_all_df, 'comm_orientation_all')
-comm_orientation_all_df <- impute(comm_orientation_all_df)
-comm_orientation_all_df <- make_long(comm_orientation_all_df, 'comm_orientation_all')
+comm_orientation_all_df_wide <- make_wide(comm_orientation_all_df, 'comm_orientation_all')
+comm_orientation_all_df_imputed <- impute(comm_orientation_all_df_wide)
+comm_orientation_T234 <- take_out_baseline(comm_orientation_all_df_imputed, 'comm_orientation_all')
+comm_orientation_all_df <- make_long(comm_orientation_all_df_imputed, 'comm_orientation_all')
 
-stress_all_df <- make_wide(stress_all_df, 'stress_all')
-stress_all_df <- impute(stress_all_df)
-stress_all_df <- make_long(stress_all_df, 'stress_all')
+stress_all_df_wide <- make_wide(stress_all_df, 'stress_all')
+stress_all_df_imputed <- impute(stress_all_df_wide)
+stress_T234 <- take_out_baseline(stress_all_df_imputed, 'stress_all')
+stress_all_df <- make_long(stress_all_df_imputed, 'stress_all')
 
-social_activity_all_df <- make_wide(social_activity_all_df, 'social_activity_all')
-social_activity_all_df <- impute(social_activity_all_df)
-social_activity_all_df <- make_long(social_activity_all_df, 'social_activity_all')
+social_activity_all_df_wide <- make_wide(social_activity_all_df, 'social_activity_all')
+social_activity_all_df_imputed <- impute(social_activity_all_df_wide)
+social_activity_T234 <- take_out_baseline(social_activity_all_df_imputed, 'social_activity_all')
+social_activity_all_df <- make_long(social_activity_all_df_imputed, 'social_activity_all')
 
 joined_df <- inner_join(x = vitality_df, y = log_depression_df, by = c('sub_id', 'intervention', 'week'))
 joined_df <- inner_join(x = joined_df, y = rec_loneliness_avg_df, by = c('sub_id', 'intervention', 'week'))
@@ -652,6 +668,10 @@ write.csv(joined_df, 'dissdata_complete.csv')
 #Removing people with only one time point
 cleaned_df <- subset(joined_df, sub_id != 'A4' & sub_id != 'B5' & sub_id != 'F1')
 
+#Dummy Coding Intervention
+cleaned_df$intervention <- gsub('I', '1', cleaned_df$intervention)
+cleaned_df$intervention <- gsub('C', '0', cleaned_df$intervention)
+
 cleaned_control_df <- subset(control_df, week == 1)
 cleaned_control_df <- within(cleaned_control_df, rm('week'))
 head(cleaned_control_df)
@@ -660,28 +680,376 @@ head(cleaned_control_df)
 my_df <- inner_join(x = cleaned_control_df, y = cleaned_df, by = c('sub_id', 'intervention'))
 
 #Dummy Coding Intervention
-my_df$intervention <- gsub('I', '1', my_df$intervention)
-my_df$intervention <- gsub('C', '0', my_df$intervention)
-head(my_df)
+commorient_without_baseline$intervention <- gsub('I', '1', commorient_without_baseline$intervention)
+commorient_without_baseline$intervention <- gsub('C', '0', commorient_without_baseline$intervention)
+
+cleaned_df$CO_woT1 <- commorient_without_baseline$AvgCommT2T3T4
+
+
+#Multilevel mediation with logitudinal data with bootstrapping
+
+#outliers
+mahal = mahalanobis(no_character,
+                    colMeans(no_character),
+                    cov(no_character))
+cutoff = qchisq(1-.001, ncol(no_character))
+table(mahal < cutoff)
+noout = subset(no_character, mahal < cutoff)
+
+#correlations additivity
+no_character <- round(no_character, 2)
+head(no_character)
+correl = cor(no_character)
+correl
+
+##fake regression style data screening - allows you to screen across all of the variables
+random = rchisq(nrow(cleaned_df), 7)
+fake = lm(random ~ ., data = cleaned_df)
+standardized = rstudent(fake)
+fitted = scale(fake$fitted.values)
+
+#linearity - qqplot looks linear 
+qqnorm(standardized)
+abline(0,1)
+
+#normality - should be centered over zero and it is - looks good
+hist(standardized)
+
+#homog/s - plot of fitted values (predicted score against standardized residuals) 
+# you want this to be evenly across 0 both ways and that looks true (homogeneity)
+#homoskidasticity, you want an even spread all the way across which looks to be true
+plot(fitted, standardized)
+abline(0,0)
+abline(v = 0)
+
+##mediation with lingitudinal data
+#first need to test whether x and y are even related 
+#c path, x predicts y - this only matters if you think the c path matters, which some people do not 
+head(cleaned_df)
+cpath_socengage = lm(social_activity_all ~ intervention, data = cleaned_df)
+summary(cpath_socengage) #sig
+
+cpath_vitality = lm(vitality ~ intervention, data = cleaned_df)
+summary(cpath_vitality) #not sig
+
+cpath_depression = lm(log_depression ~ intervention, data = cleaned_df)
+summary(cpath_depression) #not sig., could be because of the transformation
+
+cpath_stress = lm(stress_all ~ intervention, data = cleaned_df)
+summary(cpath_stress) #sig
+
+cpath_lon = lm(rec_loneliness_avg ~ intervention, data = cleaned_df)
+summary(cpath_lon) #sig
+
+#a path
+apath_commorient = lm(comm_orientation_all ~ intervention, data = cleaned_df)
+summary(apath_commorient) #sig
+
+#b path, m predicts y with x
+#c' path x is diminished with m predicting y 
+bpath_socengage = lm(social_activity_all ~ intervention + comm_orientation_all, data = cleaned_df)
+summary(bpath_socengage)
+
+bpath_vitality = lm(vitality ~ intervention + comm_orientation_all, data = cleaned_df)
+summary(bpath_vitality)
+
+bpath_depression = lm(log_depression ~ intervention + comm_orientation_all, data = cleaned_df)
+summary(bpath_depression)
+
+bpath_stress = lm(stress_all ~ intervention + comm_orientation_all, data = cleaned_df)
+summary(bpath_stress)
+
+bpath_lon = lm(rec_loneliness_avg ~ intervention + comm_orientation_all, data = cleaned_df)
+summary(bpath_lon)
+
+#aroian sobel - social engagement
+a = apath_commorient$coefficients[2]
+a
+b_socengage = bpath_socengage$coefficients[3]
+b_socengage
+SEa = coef(summary(apath_commorient))[ , "Std. Error"][2]
+SEb_socengage = coef(summary(bpath_socengage))[ , "Std. Error"][3]
+zscore = (a*b_socengage)/(sqrt((b_socengage^2*SEa^2)+(a^2*SEb_socengage^2)+(SEa*SEb_socengage)))
+zscore
+pnorm(abs(zscore), lower.tail = F)*2
+
+#Process output
+total_socengage = cpath_socengage$coefficients[2] ##c path
+direct = bpath$coefficients[2] ## c' path
+indirect = a*b_socengage
+
+total_socengage; direct; indirect
+
+#In process, there is a bootstrap confidence interval
+#bootstrapping the mediation effect
+#write a function that gives you the numbers you want 
+#we want the indirect effect
+#what is bootstrapping? think of the lottery: you pull randomly from you dataset and then replace them
+#sampling with replacement
+indirectsaved_socengage = function(dataset, random) {
+  d = dataset[random, ] ##randomize by row
+  apath = lm(comm_orientation_all ~ intervention, data = d)
+  bpath = lm(social_activity_all ~ intervention + comm_orientation_all, data = d)
+  indirect = apath$coefficients[2]*bpath$coefficients[3]
+  return(indirect)
+}
+
+bootresults = boot(data = cleaned_df,
+                   statistic = indirectsaved_socengage,
+                   R = 1000)
+bootresults
+boot.ci(bootresults, 
+        conf = .95,
+        type = "norm") ##includes zero, no good
+
+indirectsaved_vitality = function(dataset, random) {
+  d = dataset[random, ] ##randomize by row
+  apath = lm(comm_orientation_all ~ intervention, data = d)
+  bpath = lm(vitality ~ intervention + comm_orientation_all, data = d)
+  indirect = apath$coefficients[2]*bpath$coefficients[3]
+  return(indirect)
+}
+
+bootresults = boot(data = cleaned_df,
+                   statistic = indirectsaved_vitality,
+                   R = 1000)
+bootresults
+boot.ci(bootresults, 
+        conf = .95,
+        type = "norm") #does not include zero, good
+
+indirectsaved_depression = function(dataset, random) {
+  d = dataset[random, ] ##randomize by row
+  apath = lm(comm_orientation_all ~ intervention, data = d)
+  bpath = lm(log_depression ~ intervention + comm_orientation_all, data = d)
+  indirect = apath$coefficients[2]*bpath$coefficients[3]
+  return(indirect)
+}
+
+bootresults = boot(data = cleaned_df,
+                   statistic = indirectsaved_depression,
+                   R = 1000)
+bootresults
+boot.ci(bootresults, 
+        conf = .95,
+        type = "norm") #does include zero, not good 
+
+indirectsaved_stress = function(dataset, random) {
+  d = dataset[random, ] ##randomize by row
+  apath = lm(comm_orientation_all ~ intervention, data = d)
+  bpath = lm(stress_all ~ intervention + comm_orientation_all, data = d)
+  indirect = apath$coefficients[2]*bpath$coefficients[3]
+  return(indirect)
+}
+
+bootresults = boot(data = cleaned_df,
+                   statistic = indirectsaved_stress,
+                   R = 1000)
+bootresults
+boot.ci(bootresults, 
+        conf = .95,
+        type = "norm") #does include zero
+
+indirectsaved_loneliness = function(dataset, random) {
+  d = dataset[random, ] ##randomize by row
+  apath = lm(comm_orientation_all ~ intervention, data = d)
+  bpath = lm(rec_loneliness_avg ~ intervention + comm_orientation_all, data = d)
+  indirect = apath$coefficients[2]*bpath$coefficients[3]
+  return(indirect)
+}
+
+bootresults = boot(data = cleaned_df,
+                   statistic = indirectsaved_loneliness,
+                   R = 1000)
+bootresults
+boot.ci(bootresults, 
+        conf = .95,
+        type = "norm") #does not include zero, good
 
 #Fitting the unconditional models, with no predictors besides the time variable, Week, 
 #which is an important first step when exploring the data and gives insight into the data to be explored
 library(lme4)
-#intercept is mean of the Time var - quality communication 
-random_intercept_social_activity <- lmer(social_activity_all ~ 1 + week + (1|sub_id), data = my_df)
-summary(random_intercept_social_activity)
+#first, need to subtract 1 from week so that time starts at zero
+cleaned_df <- mutate(cleaned_df, week = week - 1) 
 
-random_intercept_comm_orientation_all <- lmer(comm_orientation_all ~ 1 + week + (1|sub_id), data = my_df)
+#It is good practice to standardize your explanatory variables before proceeding so that they have a 
+#mean of zero and sd of 1. It ensures that the estimated coefficients are all on the same scale, making
+#easier to compare effect sizes. 
+#scale centers the data (the comlumn mean is subtracted from the values in the column) and then scale it
+#(the centered column values are divided by the column's sd). 
+cleaned_df$comm_orientation_all2 <- scale(cleaned_df$comm_orientation_all)
+library(lme4)
+
+
+
+#basic model
+intercecpt_stress <- gls(stress_all ~ 1, data = cleaned_df)
+summary(intercecpt_stress)
+randomIntercept_stress <- lmer(stress_all ~ 1 + (1|sub_id), data = cleaned_df)
+summary(randomIntercept_stress)
+timeRI_stress <- lmer(stress_all ~ 1 + week + (1|sub_id), data = cleaned_df)
+summary(timeRI_stress)
+timeRI_stress_int <- lmer(stress_all ~ 1 + week + intervention + intervention:week +
+                            (1|sub_id), data = cleaned_df)
+summary(timeRI_stress_int)
+
+#start with basic model for this outcome also
+randomIntercept_comm_orient <- gls(comm_orientation_all ~ 1, data = cleaned_df)
+
+randomIntercept_commorient <- lmer(comm_orientation_all ~ 1 + (1|sub_id), data = cleaned_df)
+
+timeRI_commorient <- lmer(comm_orientation_all ~ 1 + week + (1|sub_id), data = cleaned_df)
+
+timeRI_commorient_int <- lmer(comm_orientation_all ~ 1 + week + intervention + (1|sub_id), data = cleaned_df)
+
+RI_commorient_interaction <- lmer(comm_orientation_all ~ 1 + intervention + (1|sub_id), data = cleaned_df)
+
+controlling_time_commorient <- lmer(comm_orientation_all ~ 1 + intervention + (week|sub_id), data = cleaned_df)
+
+
+anova(randomIntercept_commorient, timeRI_commorient, timeRI_commorient_int, 
+      controlling_time_commorient)
+
+timeRI_commorient_int <- lmer(comm_orientation_all ~ 1 + week + intervention + intervention:week + 
+                                (1|sub_id), data = cleaned_df)
+
+timeRI_fullmediation <- lmer(stress_all ~ 1 + week + intervention + comm_orientation_all + intervention:week
+                               (1|sub_id), data = cleaned_df)
+
+timeRI_fullmediation_interaction <- lmer(stress_all ~ 1 + week + intervention + comm_orientation_all + 
+                               week:comm_orientation_all + (1|sub_id), data = cleaned_df)
+
+anova(randomIntercept_stress, timeRI_stress, timeRI_stress_int, timeRI_commorient_int, timeRI_fullmediation, timeRI_fullmediation_interaction)
+head(cleaned_df)
+
+
+
+#generating model predicted values are helpful
+data_agg <- cleaned_df %>%
+  mutate(pred_values = predict(random_int_social_activity))
+library(ggplot2)
+ggplot(data_agg, aes(x = week, y = pred_values)) + 
+  geom_line(aes(group = sub_id), alpha = 0.6) +
+  theme_bw(base_size = 16) + #changes the default theme
+  xlab("Weeks") +
+  ylab("social engagement")
+
+#using nlme - unconditional model
+#Model formulation
+#Level 1 Yij Level 2 β0j =β0j+Rij=γ00+U0j(1)(2)(3)
+#with,
+#U0j∼(0, τ200),(4)
+#and
+#Rij∼(0, σ2)(5)
+#To fit this model we run
+
+library(nlme)
+
+lme(social_activity_all ~ 1, random = ~1 | sub_id, data = cleaned_df)
+#Unconditional growth model
+lme(social_activity_all ~ week, random = ~week | sub_id, data = cleaned_df)
+
+
+random_intercept_comm_orientation_all <- lmer(comm_orientation_all ~ 1 + week + intervention +
+                                                (1|sub_id), data = my_df)
 summary(random_intercept_comm_orientation_all)
 
-random_intercept_stress_all <- lmer(stress_all ~ 1 + week + (1|sub_id), data = my_df)
+random_intercept_stress_all <- lmer(stress_all ~ 1 + week + (1|sub_id), 
+                                    data = my_df)
 summary(random_intercept_stress_all)
 
-random_intercept_loneliness_all <- lmer(rec_loneliness_avg ~ 1 + week + (1|sub_id), data = my_df)
+random_intercept_loneliness_all <- lmer(rec_loneliness_avg ~ 1 + week + 
+                                          (1|sub_id), data = my_df)
 summary(random_intercept_loneliness_all)
 
-random_intercept_depression_all <- lmer(log_depression ~ 1 + week + (1|sub_id), data = my_df)
+random_intercept_depression_all <- lmer(log_depression ~ 1 + week + (1|sub_id), 
+                                        data = my_df)
 summary(random_intercept_depression_all)
 
-random_intercept_loneliness_all <- lmer(rec_loneliness_avg ~ 1 + week + (1|sub_id), data = my_df)
+random_intercept_loneliness_all <- lmer(rec_loneliness_avg ~ 1 + week + (1|sub_id), 
+                                        data = my_df)
 summary(random_intercept_loneliness_all)
+
+devtools::install_github("doomlab/MeMoBootR")
+library(MeMoBootR)
+head(my_df)
+#H1
+saved1 = mediation1(y = 'social_activity_all', #DV 
+                    x = 'intervention', #IV
+                    m = 'comm_orientation_all', 
+                    cvs = c('week', 'time_at_mara', 'family_close', 'family_talk'), #Any covariates
+                    df = my_df, #dataframe
+                    with_out = T, #not required but can change 
+                    nboot = 1000, #number of bootstraps
+                    conf_level = .95) #CI width
+summary(saved1)
+#outlier information is in the DF
+View(saved$datascreening$fulldata)
+#additivity
+saved$datascreening$correl
+#linearity
+saved$datascreening$linearity
+#normality
+saved$datascreening$normality
+#homogs
+saved$datascreening$homogen
+####view the analysis###
+summary(saved$model1) #c path
+summary(saved$model2) #a path
+summary(saved$model3) #b path
+
+saved2 = mediation1(y = 'vitality', #DV 
+                   x = 'intervention', #IV
+                   m = 'comm_orientation_all', 
+                   cvs = c('week'), #Any covariates
+                   df = cleaned_df, #dataframe
+                   with_out = T, #not required but can change 
+                   nboot = 1000, #number of bootstraps
+                   conf_level = .95) #CI width
+summary(saved2)
+####view the analysis###
+summary(saved2$model1) #c path
+summary(saved2$model2) #a path
+summary(saved2$model3) #b path
+
+saved3 = mediation1(y = 'log_depression', #DV 
+                    x = 'intervention', #IV
+                    m = 'comm_orientation_all', 
+                    cvs = c('week'), #Any covariates
+                    df = cleaned_df, #dataframe
+                    with_out = T, #not required but can change 
+                    nboot = 1000, #number of bootstraps
+                    conf_level = .95) #CI width
+summary(saved3)
+####view the analysis###
+summary(saved3$model1) #c path
+summary(saved3$model2) #a path
+summary(saved3$model3) #b path
+
+saved4 = mediation1(y = 'stress_all', #DV 
+                    x = 'intervention', #IV
+                    m = 'comm_orientation_all', 
+                    cvs = c('week'), #Any covariates
+                    df = cleaned_df, #dataframe
+                    with_out = T, #not required but can change 
+                    nboot = 1000, #number of bootstraps
+                    conf_level = .95) #CI width
+summary(saved4)
+####view the analysis###
+summary(saved4$model1) #c path
+summary(saved4$model2) #a path
+summary(saved4$model3) #b path
+
+saved5 = mediation1(y = 'rec_loneliness_avg', #DV 
+                    x = 'intervention', #IV
+                    m = 'comm_orientation_all', 
+                    cvs = c('week'), #Any covariates
+                    df = cleaned_df, #dataframe
+                    with_out = T, #not required but can change 
+                    nboot = 1000, #number of bootstraps
+                    conf_level = .95) #CI width
+summary(saved2)
+####view the analysis###
+summary(saved5$model1) #c path
+summary(saved5$model2) #a path
+summary(saved5$model3) #b path
