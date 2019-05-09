@@ -642,62 +642,52 @@ load_data <- function() {
 
 load_data()
 
-
-vitality_row_means <- vitality_df_imputed %>%
-  as.character('week_vitality_1':'week_vitality_7') %>%
-  as.numeric('week_vitality_1':'week_vitality_7') %>%
-  mutate(vitality1_avg = paste0(week_prefix, week)) %>%
-  mutate(row)
-  rowMeans()
-
 vitality_df_wide <- make_wide(vitality_df, 'vitality')
 vitality_df_imputed <- impute(vitality_df_wide)
-head(vitality_df_imputed)
-class(vitality_df_imputed)
-rowMeans(vitality_df_imputed)
-vitality_T234 <- take_out_baseline(vitality_df_imputed, 'vitality')
+vitality_avg234 <- take_out_baseline(vitality_df_imputed, 'vitality')
+head(vitality_avg234)
 vitality_baseline <- baseline_only(vitality_df_imputed, 'vitality')
 vitality_df <- make_long(vitality_df_imputed, 'vitality')
 
 log_depression_df_wide <- make_wide(log_depression_df, 'log_depression')
 log_depression_df_imputed <- impute(log_depression_df_wide)
-depression_T234 <- take_out_baseline(log_depression_df_imputed, 'log_depression')
+depression_avg234 <- take_out_baseline(log_depression_df_imputed, 'log_depression')
 depression_baseline <- baseline_only(log_depression_df_imputed, 'log_depression')
 log_depression_df <- make_long(log_depression_df_imputed, 'log_depression')
 
 rec_loneliness_avg_df_wide <- make_wide(rec_loneliness_avg_df, 'rec_loneliness_avg')
 rec_loneliness_avg_df_imputed <- impute(rec_loneliness_avg_df_wide)
-rec_loneliness_T234 <- take_out_baseline(rec_loneliness_avg_df_imputed, 'loneliness')
+rec_loneliness_avg234 <- take_out_baseline(rec_loneliness_avg_df_imputed, 'loneliness')
 rec_loneliness_baseline <- baseline_only(rec_loneliness_avg_df_imputed, 'rec_loneliness_avg')
 rec_loneliness_avg_df <- make_long(rec_loneliness_avg_df_imputed, 'rec_loneliness_avg')
 
 log_loneliness_avg_df_wide <- make_wide(log_loneliness_avg_df, 'log_loneliness_avg')
 log_loneliness_avg_df_imputed <- impute(log_loneliness_avg_df_wide)
-log_loneliness_T234 <- take_out_baseline(log_loneliness_avg_df_imputed, 'log_loneliness_avg')
+log_loneliness_avg234 <- take_out_baseline(log_loneliness_avg_df_imputed, 'log_loneliness_avg')
 log_loneliness_baseline <- baseline_only(log_loneliness_avg_df_imputed, 'log_loneliness_avg')
 log_loneliness_avg_df <- make_long(log_loneliness_avg_df_imputed, 'log_loneliness_avg')
 
 loneliness_all_df_wide <- make_wide(loneliness_all_df, 'loneliness_all')
 loneliness_all_df_imputed <- impute(loneliness_all_df_wide)
-loneliness_avg_T234 <- take_out_baseline(loneliness_all_df_imputed, 'loneliness_all')
+loneliness_avg_avg234 <- take_out_baseline(loneliness_all_df_imputed, 'loneliness_all')
 loneliness_baseline <- baseline_only(loneliness_all_df_imputed, 'loneliness_all')
 loneliness_all_df <- make_long(loneliness_all_df_imputed, 'loneliness_all')
 
 comm_orientation_all_df_wide <- make_wide(comm_orientation_all_df, 'comm_orientation_all')
 comm_orientation_all_df_imputed <- impute(comm_orientation_all_df_wide)
-comm_orientation_T234 <- take_out_baseline(comm_orientation_all_df_imputed, 'comm_orientation_all')
+comm_orientation_avg234 <- take_out_baseline(comm_orientation_all_df_imputed, 'comm_orientation_all')
 comm_orientation_baseline <- baseline_only(comm_orientation_all_df_imputed, 'comm_orientation_all')
 comm_orientation_all_df <- make_long(comm_orientation_all_df_imputed, 'comm_orientation_all')
 
 stress_all_df_wide <- make_wide(stress_all_df, 'stress_all')
 stress_all_df_imputed <- impute(stress_all_df_wide)
-stress_T234 <- take_out_baseline(stress_all_df_imputed, 'stress_all')
+stress_avg234 <- take_out_baseline(stress_all_df_imputed, 'stress_all')
 stress_baseline <- baseline_only(stress_all_df_imputed, 'stress_all')
 stress_all_df <- make_long(stress_all_df_imputed, 'stress_all')
 
 social_activity_all_df_wide <- make_wide(social_activity_all_df, 'social_activity_all')
 social_activity_all_df_imputed <- impute(social_activity_all_df_wide)
-social_activity_T234 <- take_out_baseline(social_activity_all_df_imputed, 'social_activity_all')
+social_activity_avg234 <- take_out_baseline(social_activity_all_df_imputed, 'social_activity_all')
 social_activity_baseline <- baseline_only(social_activity_all_df_imputed, 'social_activity_all')
 social_activity_all_df <- make_long(social_activity_all_df_imputed, 'social_activity_all')
 
@@ -709,17 +699,26 @@ joined_df <- inner_join(x = joined_df, y = comm_orientation_all_df, by = c('sub_
 joined_df <- inner_join(x = joined_df, y = stress_all_df, by = c('sub_id', 'intervention', 'week'))
 joined_df <- inner_join(x = joined_df, y = social_activity_all_df, by = c('sub_id', 'intervention', 'week'))
 
-joined_df_with_avgs <- full_join(x = joined_df, y = vitality_T234$vitality_avg234, by = c('sub_id', 'intervention'))
 
+joined_df_avgs_vitality <- full_join(x = joined_df, y = vitality_avg234, by = c('sub_id', 'intervention'))
+head(joined_df_avgs_vitality)
+joined_df_avgs_depression <- full_join(x = joined_df, y = depression_avg234, by = c('sub_id', 'intervention'))
+joined_df_avgs_rec_loneliness <- full_join(x = joined_df_with_avgs, y = rec_loneliness_avg234, by = c('sub_id', 'intervention'))
+head(joined_df_avgs_rec_loneliness)
+joined_df_avgs_log_loneliness <- full_join(x = joined_df_with_avgs, y = log_loneliness_avg234, by = c('sub_id', 'intervention'))
+joined_df_avgs_loneliness <- full_join(x = joined_df_with_avgs, y = loneliness_avg_avg234, by = c('sub_id', 'intervention'))
+joined_df_avgs_comm_orientation <- full_join(x = joined_df_with_avgs, y = comm_orientation_avg234, by = c('sub_id','intervention'))
+joined_df_avgs_stress <- full_join(x = joined_df_with_avgs, y = stress_avg234, by = c('sub_id','intervention'))
+joined_df_avgs_social_activity <- full_join(x = joined_df_with_avgs, y = social_activity_avg234, by = c('sub_id','intervention'))
+head(joined_df_avgs_social_activity)
 
-joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = depression_T234, by = c('sub_id', 'intervention'))
-joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = rec_loneliness_T234, by = c('sub_id', 'intervention'))
-joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = log_loneliness_T234, by = c('sub_id', 'intervention'))
-joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = loneliness_avg_T234, by = c('sub_id', 'intervention'))
-joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = comm_orientation_T234, by = c('sub_id','intervention'))
-joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = stress_T234, by = c('sub_id','intervention'))
-joined_df_with_avgs <- full_join(x = joined_df_with_avgs, y = social_activity_T234, by = c('sub_id','intervention'))
-head(joined_df_with_avgs)
+joined_df$vitality_avg234 <- joined_df_avgs_vitality$vitality_avg234
+joined_df$depression_avg234 <- joined_df_avgs_depression$log_depression_avg234
+joined_df$rec_loneliness_avg234 <- joined_df_avgs_rec_loneliness$loneliness_avg234
+joined_df$comm_orientation_avg234 <- joined_df_avgs_comm_orientation$comm_orientation_all_avg234
+joined_df$stress_avg234 <- joined_df_avgs_stress$stress_all_avg234
+joined_df$social_activity_avg234 <- joined_df_avgs_social_activity$social_activity_all_avg234
+head(joined_df)
 
 joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = vitality_baseline, by = c('sub_id', 'intervention'))
 joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = depression_baseline, by = c('sub_id', 'intervention'))
@@ -729,24 +728,26 @@ joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = loneliness+avg
 joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = comm_orientation_baseline, by = c('sub_id', 'intervention'))
 joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = stress_baseline, by = c('sub_id', 'intervention'))
 joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = social_activity_baseline, by = c('sub_id', 'intervention'))
-
 head(joined_df_with_baseline)
+
+joined_df$vitality_baseline <- joined_df_with_baseline$vitality_avgbase
+joined_df$depression_baseline <- joined_df_with_baseline$log_depression_avgbase
+joined_df$rec_loneliness_baseline <- joined_df_with_baseline$rec_loneliness_avg_avgbase
+joined_df$comm_orientation_baseline <- joined_df_with_baseline$comm_orientation_all_avgbase
+joined_df$stress_baseline <- joined_df_with_baseline$stress_all_avgbase
+joined_df$social_activity_baseline <- joined_df_with_baseline$social_activity_all_avgbase
+head(joined_df)
   
 write.csv(joined_df, 'dissdata_complete.csv')
 
 #Removing people with only one time point
 cleaned_df <- subset(joined_df, sub_id != 'A4' & sub_id != 'B5' & sub_id != 'F1')
 
-#Adding isolated variables
-cleaned_df$vitality_avg234 <- vitality_T234$vitality_avg234
-vitality_T234
-head(dissdata, n = 50)
-vitality_df_wide
-head(cleaned_df)
-
 #Dummy Coding Intervention
 cleaned_df$intervention <- gsub('I', '1', cleaned_df$intervention)
 cleaned_df$intervention <- gsub('C', '0', cleaned_df$intervention)
+
+head(cleaned_df)
 
 cleaned_control_df <- subset(control_df, week == 1)
 cleaned_control_df <- within(cleaned_control_df, rm('week'))
@@ -755,190 +756,12 @@ head(cleaned_control_df)
 #adding in control vars to dataset
 my_df <- inner_join(x = cleaned_control_df, y = cleaned_df, by = c('sub_id', 'intervention'))
 
-#Multilevel mediation with logitudinal data with bootstrapping
-
-#outliers
-mahal = mahalanobis(no_character,
-                    colMeans(no_character),
-                    cov(no_character))
-cutoff = qchisq(1-.001, ncol(no_character))
-table(mahal < cutoff)
-noout = subset(no_character, mahal < cutoff)
-
-#correlations additivity
-no_character <- round(no_character, 2)
-head(no_character)
-correl = cor(no_character)
-correl
-
-##fake regression style data screening - allows you to screen across all of the variables
-random = rchisq(nrow(cleaned_df), 7)
-fake = lm(random ~ ., data = cleaned_df)
-standardized = rstudent(fake)
-fitted = scale(fake$fitted.values)
-
-#linearity - qqplot looks linear 
-qqnorm(standardized)
-abline(0,1)
-
-#normality - should be centered over zero and it is - looks good
-hist(standardized)
-
-#homog/s - plot of fitted values (predicted score against standardized residuals) 
-# you want this to be evenly across 0 both ways and that looks true (homogeneity)
-#homoskidasticity, you want an even spread all the way across which looks to be true
-plot(fitted, standardized)
-abline(0,0)
-abline(v = 0)
-
-##mediation with lingitudinal data
-#first need to test whether x and y are even related 
-#c path, x predicts y - this only matters if you think the c path matters, which some people do not 
-head(cleaned_df)
-cpath_socengage = lm(social_activity_all ~ intervention, data = cleaned_df)
-summary(cpath_socengage) #sig
-
-cpath_vitality = lm(vitality ~ intervention, data = cleaned_df)
-summary(cpath_vitality) #not sig
-
-cpath_depression = lm(log_depression ~ intervention, data = cleaned_df)
-summary(cpath_depression) #not sig., could be because of the transformation
-
-cpath_stress = lm(stress_all ~ intervention, data = cleaned_df)
-summary(cpath_stress) #sig
-
-cpath_lon = lm(rec_loneliness_avg ~ intervention, data = cleaned_df)
-summary(cpath_lon) #sig
-
-#a path
-apath_commorient = lm(comm_orientation_all ~ intervention, data = cleaned_df)
-summary(apath_commorient) #sig
-
-#b path, m predicts y with x
-#c' path x is diminished with m predicting y 
-bpath_socengage = lm(social_activity_all ~ intervention + comm_orientation_all, data = cleaned_df)
-summary(bpath_socengage)
-
-bpath_vitality = lm(vitality ~ intervention + comm_orientation_all, data = cleaned_df)
-summary(bpath_vitality)
-
-bpath_depression = lm(log_depression ~ intervention + comm_orientation_all, data = cleaned_df)
-summary(bpath_depression)
-
-bpath_stress = lm(stress_all ~ intervention + comm_orientation_all, data = cleaned_df)
-summary(bpath_stress)
-
-bpath_lon = lm(rec_loneliness_avg ~ intervention + comm_orientation_all, data = cleaned_df)
-summary(bpath_lon)
-
-#aroian sobel - social engagement
-a = apath_commorient$coefficients[2]
-a
-b_socengage = bpath_socengage$coefficients[3]
-b_socengage
-SEa = coef(summary(apath_commorient))[ , "Std. Error"][2]
-SEb_socengage = coef(summary(bpath_socengage))[ , "Std. Error"][3]
-zscore = (a*b_socengage)/(sqrt((b_socengage^2*SEa^2)+(a^2*SEb_socengage^2)+(SEa*SEb_socengage)))
-zscore
-pnorm(abs(zscore), lower.tail = F)*2
-
-#Process output
-total_socengage = cpath_socengage$coefficients[2] ##c path
-direct = bpath$coefficients[2] ## c' path
-indirect = a*b_socengage
-
-total_socengage; direct; indirect
-
-#In process, there is a bootstrap confidence interval
-#bootstrapping the mediation effect
-#write a function that gives you the numbers you want 
-#we want the indirect effect
-#what is bootstrapping? think of the lottery: you pull randomly from you dataset and then replace them
-#sampling with replacement
-indirectsaved_socengage = function(dataset, random) {
-  d = dataset[random, ] ##randomize by row
-  apath = lm(comm_orientation_all ~ intervention, data = d)
-  bpath = lm(social_activity_all ~ intervention + comm_orientation_all, data = d)
-  indirect = apath$coefficients[2]*bpath$coefficients[3]
-  return(indirect)
-}
-
-bootresults = boot(data = cleaned_df,
-                   statistic = indirectsaved_socengage,
-                   R = 1000)
-bootresults
-boot.ci(bootresults, 
-        conf = .95,
-        type = "norm") ##includes zero, no good
-
-indirectsaved_vitality = function(dataset, random) {
-  d = dataset[random, ] ##randomize by row
-  apath = lm(comm_orientation_all ~ intervention, data = d)
-  bpath = lm(vitality ~ intervention + comm_orientation_all, data = d)
-  indirect = apath$coefficients[2]*bpath$coefficients[3]
-  return(indirect)
-}
-
-bootresults = boot(data = cleaned_df,
-                   statistic = indirectsaved_vitality,
-                   R = 1000)
-bootresults
-boot.ci(bootresults, 
-        conf = .95,
-        type = "norm") #does not include zero, good
-
-indirectsaved_depression = function(dataset, random) {
-  d = dataset[random, ] ##randomize by row
-  apath = lm(comm_orientation_all ~ intervention, data = d)
-  bpath = lm(log_depression ~ intervention + comm_orientation_all, data = d)
-  indirect = apath$coefficients[2]*bpath$coefficients[3]
-  return(indirect)
-}
-
-bootresults = boot(data = cleaned_df,
-                   statistic = indirectsaved_depression,
-                   R = 1000)
-bootresults
-boot.ci(bootresults, 
-        conf = .95,
-        type = "norm") #does include zero, not good 
-
-indirectsaved_stress = function(dataset, random) {
-  d = dataset[random, ] ##randomize by row
-  apath = lm(comm_orientation_all ~ intervention, data = d)
-  bpath = lm(stress_all ~ intervention + comm_orientation_all, data = d)
-  indirect = apath$coefficients[2]*bpath$coefficients[3]
-  return(indirect)
-}
-
-bootresults = boot(data = cleaned_df,
-                   statistic = indirectsaved_stress,
-                   R = 1000)
-bootresults
-boot.ci(bootresults, 
-        conf = .95,
-        type = "norm") #does include zero
-
-indirectsaved_loneliness = function(dataset, random) {
-  d = dataset[random, ] ##randomize by row
-  apath = lm(comm_orientation_all ~ intervention, data = d)
-  bpath = lm(rec_loneliness_avg ~ intervention + comm_orientation_all, data = d)
-  indirect = apath$coefficients[2]*bpath$coefficients[3]
-  return(indirect)
-}
-
-bootresults = boot(data = cleaned_df,
-                   statistic = indirectsaved_loneliness,
-                   R = 1000)
-bootresults
-boot.ci(bootresults, 
-        conf = .95,
-        type = "norm") #does not include zero, good
-
 #Fitting the unconditional models, with no predictors besides the time variable, Week, 
 #which is an important first step when exploring the data and gives insight into the data to be explored
 library(lme4)
 #first, need to subtract 1 from week so that time starts at zero
+class(cleaned_df$week)
+cleaned_df$week <- as.numeric(cleaned_df$week)
 cleaned_df <- mutate(cleaned_df, week = week - 1) 
 
 #It is good practice to standardize your explanatory variables before proceeding so that they have a 
@@ -946,51 +769,73 @@ cleaned_df <- mutate(cleaned_df, week = week - 1)
 #easier to compare effect sizes. 
 #scale centers the data (the comlumn mean is subtracted from the values in the column) and then scale it
 #(the centered column values are divided by the column's sd). 
-cleaned_df$comm_orientation_all2 <- scale(cleaned_df$comm_orientation_all)
+cleaned_df$comm_orientation_avg234 <- scale(cleaned_df$comm_orientation_avg234)
+
+colMeans(cleaned_df$rec_loneliness_avg234)
+
 library(lme4)
+packageVersion("lme4")
+library(nlme)
+install.packages("numDeriv")
+library(numDeriv)
+install.packages("RCurl")
+library(RCurl)
+install.packages("reshape")
+library(reshape)
+install.packages("plyr")
+library(plyr)
+library(RColorBrewer)
+library(ggplot2)
+install.packages("lmerTest")
+library(lmerTest)
 
-
-
-#basic model
-intercecpt_stress <- gls(stress_all ~ 1, data = cleaned_df)
-summary(intercecpt_stress)
-randomIntercept_stress <- lmer(stress_all ~ 1 + (1|sub_id), data = cleaned_df)
-summary(randomIntercept_stress)
-timeRI_stress <- lmer(stress_all ~ 1 + week + (1|sub_id), data = cleaned_df)
-summary(timeRI_stress)
-timeRI_stress_int <- lmer(stress_all ~ 1 + week + intervention + intervention:week +
-                            (1|sub_id), data = cleaned_df)
-summary(timeRI_stress_int)
-
-#start with basic model for this outcome also
-randomIntercept_comm_orient <- gls(comm_orientation_all ~ 1, data = cleaned_df)
-
-randomIntercept_commorient <- lmer(comm_orientation_all ~ 1 + (1|sub_id), data = cleaned_df)
-
-timeRI_commorient <- lmer(comm_orientation_all ~ 1 + week + (1|sub_id), data = cleaned_df)
-
-timeRI_commorient_int <- lmer(comm_orientation_all ~ 1 + week + intervention + (1|sub_id), data = cleaned_df)
-
-RI_commorient_interaction <- lmer(comm_orientation_all ~ 1 + intervention + (1|sub_id), data = cleaned_df)
-
-controlling_time_commorient <- lmer(comm_orientation_all ~ 1 + intervention + (week|sub_id), data = cleaned_df)
-
-
-anova(randomIntercept_commorient, timeRI_commorient, timeRI_commorient_int, 
-      controlling_time_commorient)
-
-timeRI_commorient_int <- lmer(comm_orientation_all ~ 1 + week + intervention + intervention:week + 
-                                (1|sub_id), data = cleaned_df)
-
-timeRI_fullmediation <- lmer(stress_all ~ 1 + week + intervention + comm_orientation_all + intervention:week
-                               (1|sub_id), data = cleaned_df)
-
-timeRI_fullmediation_interaction <- lmer(stress_all ~ 1 + week + intervention + comm_orientation_all + 
-                               week:comm_orientation_all + (1|sub_id), data = cleaned_df)
-
-anova(randomIntercept_stress, timeRI_stress, timeRI_stress_int, timeRI_commorient_int, timeRI_fullmediation, timeRI_fullmediation_interaction)
+#communal orientation
+library(nlme)
 head(cleaned_df)
+model1_co <- lme(comm_orientation_all ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model1_co)
+#this tells us we can reject the null 
+intervals(model1_co)
+#Calculate ICC
+(1.016626^2) / ((1.016626^2) + (0.7802982^2)) 
 
+#Unconditional Growth Model
+#Begin by plotting data to see individual slopes
+library(lattice)
+xyplot(comm_orientation_all ~ week | sub_id, data = cleaned_df, type = c("p", "r"))
+
+#Now run unconditional growth models
+#unconditional growth model (mod2) time as a fixed slope
+mod2_co <- lme(comm_orientation_all~week, random = ~1|sub_id, data = cleaned_df, method = "ML")
+summary(mod2_co)
+intervals(mod2_co)
+(1.019348^2) / ((1.019348^2) + (0.7659641^2)) 
+#now run the unconditional growth model with time as a random slope
+ctrl <- lmeControl(opt = 'optim')
+mod3_co <- lme(comm_orientation_all~week, random = ~week|sub_id, data = cleaned_df, method = "ML", control = ctrl)
+summary(mod3_co)
+intervals(mod3_co)
+(1.1498172^2) / ((1.1498172^2) + (0.7548625^2))
+#run deviant stats to compare the models 
+#first, rerun the first model (unconditional)
+model1_co <- lme(comm_orientation_all ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model1_co)
+intervals(model1_co)
+
+#Compare unconditional means model (mod1) to unconditional growth model with a fixed slope (mod2)
+(results <-anova(model1_co, mod2_co))
+results$'p-value'
+
+#Compare unconditional means model (mod1) to unconditional growth model with a random slope (mod2)
+(results <-anova(model1_co, mod3_co))
+results$'p-value'
+
+#Starting to build the conditional growth model (full model)
+#including all the predictors
+mod4_co <- lme(comm_orientation_all ~ week + intervention, random = ~1 | sub_id, data = cleaned_df, method = "ML")
+summary(mod4_co)
+intervals(mod4_co)
+interaction.plot(cleaned_df$week, cleaned_df$intervention)
 
 
 #generating model predicted values are helpful
@@ -1095,10 +940,10 @@ summary(saved3$model1) #c path
 summary(saved3$model2) #a path
 summary(saved3$model3) #b path
 
-saved4 = mediation1(y = 'stress_all', #DV 
+saved4 = mediation1(y = 'stress_avg234', #DV 
                     x = 'intervention', #IV
-                    m = 'comm_orientation_all', 
-                    cvs = c('week'), #Any covariates
+                    m = 'comm_orientation_avg234', 
+                    cvs = c('comm_orientation_avg234'), #Any covariates
                     df = cleaned_df, #dataframe
                     with_out = T, #not required but can change 
                     nboot = 1000, #number of bootstraps
