@@ -440,11 +440,6 @@ old_code <- function() {
   head(dissdata_complete)
 }
 
-#find_average <- function(input_df, col_name) {
- # find_average_col <- paste0(col_name, '1')/ 
-#}
-
-
 #Will proceed with imputation
 #flipping from long to wide
 make_wide <- function(input_df, col_name) {
@@ -700,43 +695,41 @@ joined_df <- inner_join(x = joined_df, y = stress_all_df, by = c('sub_id', 'inte
 joined_df <- inner_join(x = joined_df, y = social_activity_all_df, by = c('sub_id', 'intervention', 'week'))
 
 
-joined_df_avgs_vitality <- full_join(x = joined_df, y = vitality_avg234, by = c('sub_id', 'intervention'))
-head(joined_df_avgs_vitality)
-joined_df_avgs_depression <- full_join(x = joined_df, y = depression_avg234, by = c('sub_id', 'intervention'))
-joined_df_avgs_rec_loneliness <- full_join(x = joined_df_with_avgs, y = rec_loneliness_avg234, by = c('sub_id', 'intervention'))
-head(joined_df_avgs_rec_loneliness)
-joined_df_avgs_log_loneliness <- full_join(x = joined_df_with_avgs, y = log_loneliness_avg234, by = c('sub_id', 'intervention'))
-joined_df_avgs_loneliness <- full_join(x = joined_df_with_avgs, y = loneliness_avg_avg234, by = c('sub_id', 'intervention'))
-joined_df_avgs_comm_orientation <- full_join(x = joined_df_with_avgs, y = comm_orientation_avg234, by = c('sub_id','intervention'))
-joined_df_avgs_stress <- full_join(x = joined_df_with_avgs, y = stress_avg234, by = c('sub_id','intervention'))
-joined_df_avgs_social_activity <- full_join(x = joined_df_with_avgs, y = social_activity_avg234, by = c('sub_id','intervention'))
-head(joined_df_avgs_social_activity)
+#joined_df_avgs_vitality <- full_join(x = joined_df, y = vitality_avg234, by = c('sub_id', 'intervention'))
+#joined_df_avgs_depression <- full_join(x = joined_df, y = depression_avg234, by = c('sub_id', 'intervention'))
+#joined_df_avgs_rec_loneliness <- full_join(x = joined_df, y = rec_loneliness_avg234, by = c('sub_id', 'intervention'))
+#joined_df_avgs_log_loneliness <- full_join(x = joined_df, y = log_loneliness_avg234, by = c('sub_id', 'intervention'))
+#joined_df_avgs_loneliness <- full_join(x = joined_df, y = loneliness_avg_avg234, by = c('sub_id', 'intervention'))
+#joined_df_avgs_comm_orientation <- full_join(x = joined_df, y = comm_orientation_avg234, by = c('sub_id','intervention'))
+#joined_df_avgs_stress <- full_join(x = joined_df, y = stress_avg234, by = c('sub_id','intervention'))
+#joined_df_avgs_social_activity <- full_join(x = joined_df, y = social_activity_avg234, by = c('sub_id','intervention'))
+#head(joined_df_avgs_social_activity)
 
-joined_df$vitality_avg234 <- joined_df_avgs_vitality$vitality_avg234
-joined_df$depression_avg234 <- joined_df_avgs_depression$log_depression_avg234
-joined_df$rec_loneliness_avg234 <- joined_df_avgs_rec_loneliness$loneliness_avg234
-joined_df$comm_orientation_avg234 <- joined_df_avgs_comm_orientation$comm_orientation_all_avg234
-joined_df$stress_avg234 <- joined_df_avgs_stress$stress_all_avg234
-joined_df$social_activity_avg234 <- joined_df_avgs_social_activity$social_activity_all_avg234
-head(joined_df)
+#joined_df$vitality_avg234 <- joined_df_avgs_vitality$vitality_avg234
+#joined_df$depression_avg234 <- joined_df_avgs_depression$log_depression_avg234
+#joined_df$rec_loneliness_avg234 <- joined_df_avgs_rec_loneliness$loneliness_avg234
+#joined_df$comm_orientation_avg234 <- joined_df_avgs_comm_orientation$comm_orientation_all_avg234
+#joined_df$stress_avg234 <- joined_df_avgs_stress$stress_all_avg234
+#joined_df$social_activity_avg234 <- joined_df_avgs_social_activity$social_activity_all_avg234
+#head(joined_df)
 
-joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = vitality_baseline, by = c('sub_id', 'intervention'))
-joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = depression_baseline, by = c('sub_id', 'intervention'))
-joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = rec_loneliness_baseline, by = c('sub_id', 'intervention'))
-joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = log_loneliness_baseline, by = c('sub_id', 'intervention'))
-joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = loneliness+avg_baseline, by = c('sub_id', 'intervention'))
-joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = comm_orientation_baseline, by = c('sub_id', 'intervention'))
-joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = stress_baseline, by = c('sub_id', 'intervention'))
-joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = social_activity_baseline, by = c('sub_id', 'intervention'))
-head(joined_df_with_baseline)
+#joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = vitality_baseline, by = c('sub_id', 'intervention'))
+#joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = depression_baseline, by = c('sub_id', 'intervention'))
+#joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = rec_loneliness_baseline, by = c('sub_id', 'intervention'))
+#joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = log_loneliness_baseline, by = c('sub_id', 'intervention'))
+#joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = loneliness+avg_baseline, by = c('sub_id', 'intervention'))
+#joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = comm_orientation_baseline, by = c('sub_id', 'intervention'))
+#joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = stress_baseline, by = c('sub_id', 'intervention'))
+#joined_df_with_baseline <- full_join(x = joined_df_with_avgs, y = social_activity_baseline, by = c('sub_id', 'intervention'))
+#head(joined_df_with_baseline)
 
-joined_df$vitality_baseline <- joined_df_with_baseline$vitality_avgbase
-joined_df$depression_baseline <- joined_df_with_baseline$log_depression_avgbase
-joined_df$rec_loneliness_baseline <- joined_df_with_baseline$rec_loneliness_avg_avgbase
-joined_df$comm_orientation_baseline <- joined_df_with_baseline$comm_orientation_all_avgbase
-joined_df$stress_baseline <- joined_df_with_baseline$stress_all_avgbase
-joined_df$social_activity_baseline <- joined_df_with_baseline$social_activity_all_avgbase
-head(joined_df)
+#joined_df$vitality_baseline <- joined_df_with_baseline$vitality_avgbase
+#joined_df$depression_baseline <- joined_df_with_baseline$log_depression_avgbase
+#joined_df$rec_loneliness_baseline <- joined_df_with_baseline$rec_loneliness_avg_avgbase
+#joined_df$comm_orientation_baseline <- joined_df_with_baseline$comm_orientation_all_avgbase
+#joined_df$stress_baseline <- joined_df_with_baseline$stress_all_avgbase
+#joined_df$social_activity_baseline <- joined_df_with_baseline$social_activity_all_avgbase
+#head(joined_df)
   
 write.csv(joined_df, 'dissdata_complete.csv')
 
@@ -746,8 +739,6 @@ cleaned_df <- subset(joined_df, sub_id != 'A4' & sub_id != 'B5' & sub_id != 'F1'
 #Dummy Coding Intervention
 cleaned_df$intervention <- gsub('I', '1', cleaned_df$intervention)
 cleaned_df$intervention <- gsub('C', '0', cleaned_df$intervention)
-
-head(cleaned_df)
 
 cleaned_control_df <- subset(control_df, week == 1)
 cleaned_control_df <- within(cleaned_control_df, rm('week'))
@@ -771,27 +762,7 @@ cleaned_df <- mutate(cleaned_df, week = week - 1)
 #(the centered column values are divided by the column's sd). 
 cleaned_df$comm_orientation_avg234 <- scale(cleaned_df$comm_orientation_avg234)
 
-colMeans(cleaned_df$rec_loneliness_avg234)
-
-library(lme4)
-packageVersion("lme4")
-library(nlme)
-install.packages("numDeriv")
-library(numDeriv)
-install.packages("RCurl")
-library(RCurl)
-install.packages("reshape")
-library(reshape)
-install.packages("plyr")
-library(plyr)
-library(RColorBrewer)
-library(ggplot2)
-install.packages("lmerTest")
-library(lmerTest)
-
 #communal orientation
-library(nlme)
-head(cleaned_df)
 model1_co <- lme(comm_orientation_all ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
 summary(model1_co)
 #this tells us we can reject the null 
@@ -801,7 +772,6 @@ intervals(model1_co)
 
 #Unconditional Growth Model
 #Begin by plotting data to see individual slopes
-library(lattice)
 xyplot(comm_orientation_all ~ week | sub_id, data = cleaned_df, type = c("p", "r"))
 
 #Now run unconditional growth models
@@ -835,7 +805,24 @@ results$'p-value'
 mod4_co <- lme(comm_orientation_all ~ week + intervention, random = ~1 | sub_id, data = cleaned_df, method = "ML")
 summary(mod4_co)
 intervals(mod4_co)
-interaction.plot(cleaned_df$week, cleaned_df$intervention)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$comm_orientation_all)
+
+#Starting to build the conditional growth model (full model)
+#including all the predictors - try with random slope
+mod5_co <- lme(comm_orientation_all ~ week + intervention, random = ~week | sub_id, data = cleaned_df, method = "ML")
+summary(mod4_co)
+intervals(mod4_co)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$comm_orientation_all)
+
+#Other plotting twchniques
+xyplot(comm_orientation_all ~ week | sub_id, data = cleaned_df, groups = intervention, type = c("p", "r"))
+xyplot(comm_orientation_all ~ week | intervention, data = cleaned_df,
+       prepanel = function(x,y) prepanel.loess(x,y,family = "gaussian"),
+       xlab = "Week", ylab = "Communal Orientation",
+       panel = function(x,y) {panel.xyplot(x,y)
+         panel.loess(x,y,family= "gaussian")}, as.table = TRUE)
+
+#Compare deviant statistics 
 
 
 #generating model predicted values are helpful
