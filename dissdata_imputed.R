@@ -750,8 +750,8 @@ my_df <- inner_join(x = cleaned_control_df, y = cleaned_df, by = c('sub_id', 'in
 #Fitting the unconditional models, with no predictors besides the time variable, Week, 
 #which is an important first step when exploring the data and gives insight into the data to be explored
 library(lme4)
+library(nlme)
 #first, need to subtract 1 from week so that time starts at zero
-class(cleaned_df$week)
 cleaned_df$week <- as.numeric(cleaned_df$week)
 cleaned_df <- mutate(cleaned_df, week = week - 1) 
 
@@ -760,8 +760,9 @@ cleaned_df <- mutate(cleaned_df, week = week - 1)
 #easier to compare effect sizes. 
 #scale centers the data (the comlumn mean is subtracted from the values in the column) and then scale it
 #(the centered column values are divided by the column's sd). 
-cleaned_df$comm_orientation_avg234 <- scale(cleaned_df$comm_orientation_avg234)
-
+head(cleaned_df)
+#communal orientation
+#########
 #communal orientation
 model1_co <- lme(comm_orientation_all ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
 summary(model1_co)
@@ -823,134 +824,305 @@ xyplot(comm_orientation_all ~ week | intervention, data = cleaned_df,
          panel.loess(x,y,family= "gaussian")}, as.table = TRUE)
 
 #Compare deviant statistics 
+(results <- anova(mod3_co, mod4_co))
+results$'p-value'
+
+#calculate proportion reduction between unconditional growth model with a random slope (mod3) and the full
+#conditional growth model with all predictors (mod4)
+#level 1 is comparing weeks (repeated measures) to communal orientation
+#this is at the repeated measures model
+VarCorr(mod3_co)[1,1]
+VarCorr(mod4_co)[1,1] #this shows us that there is proportion reduction taking place
+
+#Level 2 is comparing week plus all predictors to communal orientation
+#this is at the individual level
+VarCorr(mod3_co)[2,1]
+VarCorr(mod4_co)[2,1]
+
+#this provides the unexplained variance captured in the full model - 22% of variance is being captured in full model
+(as.numeric(VarCorr(mod3_co)[1,1])-as.numeric(VarCorr(mod4_co)[1,1])/as.numeric(VarCorr(mod3_co)[1,1])) 
+
+#this provides the unexplained variance captured in the full model - 22% of variance is being captured in full model
+(as.numeric(VarCorr(mod3_co)[2,1])-as.numeric(VarCorr(mod4_co)[2,1])/as.numeric(VarCorr(mod3_co)[2,1])) 
+
+#vitality
+#########
+model1_vit <- lme(vitality ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model1_vit)
+#this tells us we can reject the null 
+intervals(model1_co)
+#Calculate ICC
+(1.148408^2) / ((1.148408^2) + (0.6794973^2)) 
+
+#Unconditional Growth Model
+#Begin by plotting data to see individual slopes
+xyplot(vitality ~ week | sub_id, data = cleaned_df, type = c("p", "r"))
+
+#Now run unconditional growth models
+#unconditional growth model (mod2) time as a fixed slope
+mod2_vit <- lme(vitality~week, random = ~1|sub_id, data = cleaned_df, method = "ML")
+summary(mod2_vit)
+intervals(mod2_vit)
+(1.148674^2) / ((1.148674^2) + (0.6776961^2)) 
+
+#now run the unconditional growth model with time as a random slope
+ctrl <- lmeControl(opt = 'optim')
+mod3_vit <- lme(vitality~week, random = ~week|sub_id, data = cleaned_df, method = "ML", control = ctrl)
+summary(mod3_vit)
+intervals(mod3_vit)
+(1.1498172^2) / ((1.1498172^2) + (0.7548625^2))
+#run deviant stats to compare the models 
+#first, rerun the first model (unconditional)
+model1_vit <- lme(vitality ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model1_vit)
+intervals(model1_vit)
+
+#Compare unconditional means model (mod1) to unconditional growth model with a fixed slope (mod2)
+(results <-anova(model1_vit, mod2_vit))
+results$'p-value'
+
+#Compare unconditional means model (mod1) to unconditional growth model with a random slope (mod2)
+(results <-anova(model1_vit, mod3_vit))
+results$'p-value'
+
+#Starting to build the conditional growth model (full model)
+#including all the predictors
+#x as a fixed effect predicting y
+mod4_vit <- lme(vitality ~ week + intervention + week:intervention, random = ~1 | sub_id, data = cleaned_df, method = "ML")
+summary(mod4_vit)
+intervals(mod4_vit)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$vitality)
+
+#x as a fixed effect predicting m
+mod5_co_vit <- lme(comm_orientation_all ~ week + intervention + week:intervention, random = ~1 | sub_id, data = cleaned_df, method = "ML")
+summary(mod5_co_vit)
+intervals(mod5_co_vit)
+
+#x fixed predicting y
+mod6_vit <- lme(vitality ~ week + intervention + comm_orientation_all + week:intervention + 
+                  week:comm_orientation_all + intervention:comm_orientation_all, random = ~1 | 
+                  sub_id, data = cleaned_df, method = "ML")
+summary(mod6_vit)
+intervals(mod6_vit)
+
+#stress
+#########
+model1_stress <- lme(stress_all ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model1_stress)
+#this tells us we can reject the null 
+intervals(model1_co)
+#Calculate ICC
+(0.4682137^2) / ((0.4682137^2) + (0.5584219^2)) 
+
+#Unconditional Growth Model
+#Begin by plotting data to see individual slopes
+xyplot(stress_all ~ week | sub_id, data = cleaned_df, type = c("p", "r"))
+
+#Now run unconditional growth models
+#unconditional growth model (mod2) time as a fixed slope
+mod2_stress <- lme(stress_all~week, random = ~1|sub_id, data = cleaned_df, method = "ML")
+summary(mod2_stress)
+intervals(mod2_stress)
+(0.4682988^2) / ((0.4682988^2) + (0.5581364^2)) 
+#now run the unconditional growth model with time as a random slope
+ctrl <- lmeControl(opt = 'optim')
+mod3_stress <- lme(stress_all~week, random = ~week|sub_id, data = cleaned_df, method = "ML")
+summary(mod3_stress)
+intervals(mod3_stress)
+(0.4910315^2) / ((0.4910315^2) + (0.5052912^2))
+#run deviant stats to compare the models 
+#first, rerun the first model (unconditional)
+model1_stress <- lme(stress_all ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model1_stress)
+intervals(model1_stress)
+
+#Compare unconditional means model (mod1) to unconditional growth model with a fixed slope (mod2)
+(results <-anova(model1_stress, mod2_stress))
+results$'p-value'
+
+#Compare unconditional means model (mod1) to unconditional growth model with a random slope (mod2)
+(results <-anova(model1_stress, mod3_stress))
+results$'p-value'
+
+#Starting to build the conditional growth model (full model)
+#including all the predictors
+mod4_stress <- lme(stress_all ~ week + intervention, random = ~1 | sub_id, data = cleaned_df, method = "ML")
+summary(mod4_stress)
+intervals(mod4_stress)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$stress_all)
+
+mod4_stress_interact <- lme(stress_all ~ week + intervention + week:intervention, random = ~1 | sub_id, data = cleaned_df, method = "ML")
+summary(mod4_stress_interact)
+intervals(mod4_stress_interact)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$stress_all)
+
+#Starting to build the conditional growth model (full model)
+#including all the predictors - try with random slope
+mod5_stress <- lme(stress_all ~ week + intervention, random = ~week | sub_id, data = cleaned_df, method = "ML")
+summary(mod5_stress)
+intervals(mod5_stress)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$stress_all)
+
+#Other plotting techniques
+xyplot(comm_orientation_all ~ week | sub_id, data = cleaned_df, groups = intervention, type = c("p", "r"))
+xyplot(comm_orientation_all ~ week | intervention, data = cleaned_df,
+       prepanel = function(x,y) prepanel.loess(x,y,family = "gaussian"),
+       xlab = "Week", ylab = "Communal Orientation",
+       panel = function(x,y) {panel.xyplot(x,y)
+         panel.loess(x,y,family= "gaussian")}, as.table = TRUE)
+
+#Compare deviant statistics 
+(results <- anova(mod3_co, mod4_co))
+results$'p-value'
+
+#calculate proportion reduction between unconditional growth model with a random slope (mod3) and the full
+#conditional growth model with all predictors (mod4)
+#level 1 is comparing weeks (repeated measures) to communal orientation
+#this is at the repeated measures model
+VarCorr(mod3_co)[1,1]
+VarCorr(mod4_co)[1,1] #this shows us that there is proportion reduction taking place
+
+#Level 2 is comparing week plus all predictors to communal orientation
+#this is at the individual level
+VarCorr(mod3_co)[2,1]
+VarCorr(mod4_co)[2,1]
+
+#this provides the unexplained variance captured in the full model - 22% of variance is being captured in full model
+(as.numeric(VarCorr(mod3_co)[1,1])-as.numeric(VarCorr(mod4_co)[1,1])/as.numeric(VarCorr(mod3_co)[1,1])) 
+
+#this provides the unexplained variance captured in the full model - 22% of variance is being captured in full model
+(as.numeric(VarCorr(mod3_co)[2,1])-as.numeric(VarCorr(mod4_co)[2,1])/as.numeric(VarCorr(mod3_co)[2,1])) 
 
 
-#generating model predicted values are helpful
-data_agg <- cleaned_df %>%
-  mutate(pred_values = predict(random_int_social_activity))
-library(ggplot2)
-ggplot(data_agg, aes(x = week, y = pred_values)) + 
-  geom_line(aes(group = sub_id), alpha = 0.6) +
-  theme_bw(base_size = 16) + #changes the default theme
-  xlab("Weeks") +
-  ylab("social engagement")
+#depression
+#########
+model1_depression <- lme(log_depression ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model1_depression)
+#this tells us we can reject the null 
+intervals(model1_co)
+#Calculate ICC
+(0.184834^2) / ((0.184834^2) + (0.2681727^2)) 
 
-#using nlme - unconditional model
-#Model formulation
-#Level 1 Yij Level 2 β0j =β0j+Rij=γ00+U0j(1)(2)(3)
-#with,
-#U0j∼(0, τ200),(4)
-#and
-#Rij∼(0, σ2)(5)
-#To fit this model we run
+#Unconditional Growth Model
+#Begin by plotting data to see individual slopes
+xyplot(log_depression ~ week | sub_id, data = cleaned_df, type = c("p", "r"))
 
-library(nlme)
+#Now run unconditional growth models
+#unconditional growth model (mod2) time as a fixed slope
+mod2_depression <- lme(log_depression~week, random = ~1|sub_id, data = cleaned_df, method = "ML")
+summary(mod2_depression)
+intervals(mod2_depression)
+(0.1862243^2) / ((0.1862243^2) + (0.25007188^2)) 
 
-lme(social_activity_all ~ 1, random = ~1 | sub_id, data = cleaned_df)
-#Unconditional growth model
-lme(social_activity_all ~ week, random = ~week | sub_id, data = cleaned_df)
+#now run the unconditional growth model with time as a random slope
+ctrl <- lmeControl(opt = 'optim')
+mod3_depression <- lme(log_depression~week, random = ~week|sub_id, data = cleaned_df, method = "ML")
+summary(mod3_depression)
+intervals(mod3_depression)
+(0.17079916^2) / ((0.17079916^2) + (0.5052912^2))
+
+#run deviant stats to compare the models 
+#first, rerun the first model (unconditional)
+model1_depression <- lme(log_depression ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model1_depression)
+intervals(model1_depression)
+
+#Compare unconditional means model (mod1) to unconditional growth model with a fixed slope (mod2)
+(results <-anova(model1_depression, mod2_depression))
+results$'p-value'
+
+#Compare unconditional means model (mod1) to unconditional growth model with a random slope (mod2)
+(results <-anova(model1_depression, mod3_depression))
+results$'p-value'
+
+#Starting to build the conditional growth model (full model)
+#including all the predictors
+mod4_depression <- lme(log_depression ~ week + intervention, random = ~1 | sub_id, data = cleaned_df, method = "ML")
+summary(mod4_depression)
+intervals(mod4_depression)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$log_depression)
+
+mod4_depression_interact <- lme(log_depression ~ week + intervention + week:intervention, random = ~1 | sub_id, data = cleaned_df, method = "ML")
+summary(mod4_depression_interact)
+intervals(mod4_depression_interact)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$depression_all)
+
+#Starting to build the conditional growth model (full model)
+#including all the predictors - try with random slope
+mod5_depression <- lme(log_depression ~ week + intervention, random = ~week | sub_id, data = cleaned_df, method = "ML")
+summary(mod5_depression)
+intervals(mod5_depression)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$stress_all)
+
+mod5_depression_interact <- lme(log_depression ~ week + intervention + week:intervention, random = ~week | sub_id, data = cleaned_df, method = "ML")
+summary(mod5_depression_interact)
+intervals(mod5_depression_interact)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$stress_all)
 
 
-random_intercept_comm_orientation_all <- lmer(comm_orientation_all ~ 1 + week + intervention +
-                                                (1|sub_id), data = my_df)
-summary(random_intercept_comm_orientation_all)
+#loneliness
+#########
+#loneliness
+head(cleaned_df)
+model1_loneliness <- lme(rec_loneliness_avg ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model1_loneliness)
+#this tells us we can reject the null 
+intervals(model1_co)
+#Calculate ICC
+(0.1730391^2) / ((0.1730391^2) + (0.1088961^2)) 
 
-random_intercept_stress_all <- lmer(stress_all ~ 1 + week + (1|sub_id), 
-                                    data = my_df)
-summary(random_intercept_stress_all)
+#Unconditional Growth Model
+#Begin by plotting data to see individual slopes
+xyplot(rec_loneliness_avg ~ week | sub_id, data = cleaned_df, type = c("p", "r"))
 
-random_intercept_loneliness_all <- lmer(rec_loneliness_avg ~ 1 + week + 
-                                          (1|sub_id), data = my_df)
-summary(random_intercept_loneliness_all)
+#Now run unconditional growth models
+#unconditional growth model (mod2) time as a fixed slope
+mod2_loneliness <- lme(rec_loneliness_avg~week, random = ~1|sub_id, data = cleaned_df, method = "ML")
+summary(mod2_loneliness)
+intervals(mod2_loneliness)
+(0.1731655^2) / ((0.1731655^2) + (0.1080894^2)) 
 
-random_intercept_depression_all <- lmer(log_depression ~ 1 + week + (1|sub_id), 
-                                        data = my_df)
-summary(random_intercept_depression_all)
+head(cleaned_df)
+#now run the unconditional growth model with time as a random slope
+ctrl <- lmeControl(opt = 'optim')
+mod3_loneliness <- lme(loneliness_all~week, random = ~week|sub_id, data = cleaned_df, method = "ML")
+summary(mod3_loneliness)
+intervals(mod3_loneliness)
+(0.17079916^2) / ((0.17079916^2) + (0.5052912^2))
 
-random_intercept_loneliness_all <- lmer(rec_loneliness_avg ~ 1 + week + (1|sub_id), 
-                                        data = my_df)
-summary(random_intercept_loneliness_all)
+#run deviant stats to compare the models 
+#first, rerun the first model (unconditional)
+model1_loneliness <- lme(rec_loneliness_avg ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model1_loneliness)
+intervals(model1_loneliness)
 
-devtools::install_github("doomlab/MeMoBootR")
-library(MeMoBootR)
-head(my_df)
-#H1
-saved1 = mediation1(y = 'social_activity_all', #DV 
-                    x = 'intervention', #IV
-                    m = 'comm_orientation_all', 
-                    cvs = c('week', 'time_at_mara', 'family_close', 'family_talk'), #Any covariates
-                    df = my_df, #dataframe
-                    with_out = T, #not required but can change 
-                    nboot = 1000, #number of bootstraps
-                    conf_level = .95) #CI width
-summary(saved1)
-#outlier information is in the DF
-View(saved$datascreening$fulldata)
-#additivity
-saved$datascreening$correl
-#linearity
-saved$datascreening$linearity
-#normality
-saved$datascreening$normality
-#homogs
-saved$datascreening$homogen
-####view the analysis###
-summary(saved$model1) #c path
-summary(saved$model2) #a path
-summary(saved$model3) #b path
+#Compare unconditional means model (mod1) to unconditional growth model with a fixed slope (mod2)
+(results <-anova(model1_loneliness, mod2_loneliness))
+results$'p-value'
 
-saved2 = mediation1(y = 'vitality', #DV 
-                   x = 'intervention', #IV
-                   m = 'comm_orientation_all', 
-                   cvs = c('week'), #Any covariates
-                   df = cleaned_df, #dataframe
-                   with_out = T, #not required but can change 
-                   nboot = 1000, #number of bootstraps
-                   conf_level = .95) #CI width
-summary(saved2)
-####view the analysis###
-summary(saved2$model1) #c path
-summary(saved2$model2) #a path
-summary(saved2$model3) #b path
+#Compare unconditional means model (mod1) to unconditional growth model with a random slope (mod2)
+(results <-anova(mod2_loneliness, mod3_loneliness))
+results$'p-value'
 
-saved3 = mediation1(y = 'log_depression', #DV 
-                    x = 'intervention', #IV
-                    m = 'comm_orientation_all', 
-                    cvs = c('week'), #Any covariates
-                    df = cleaned_df, #dataframe
-                    with_out = T, #not required but can change 
-                    nboot = 1000, #number of bootstraps
-                    conf_level = .95) #CI width
-summary(saved3)
-####view the analysis###
-summary(saved3$model1) #c path
-summary(saved3$model2) #a path
-summary(saved3$model3) #b path
+#Starting to build the conditional growth model (full model)
+#including all the predictors
+mod4_loneliness <- lme(rec_loneliness_avg ~ week + intervention, random = ~1 | sub_id, data = cleaned_df, method = "ML")
+summary(mod4_loneliness)
+intervals(mod4_loneliness)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$rec_loneliness_avg)
 
-saved4 = mediation1(y = 'stress_avg234', #DV 
-                    x = 'intervention', #IV
-                    m = 'comm_orientation_avg234', 
-                    cvs = c('comm_orientation_avg234'), #Any covariates
-                    df = cleaned_df, #dataframe
-                    with_out = T, #not required but can change 
-                    nboot = 1000, #number of bootstraps
-                    conf_level = .95) #CI width
-summary(saved4)
-####view the analysis###
-summary(saved4$model1) #c path
-summary(saved4$model2) #a path
-summary(saved4$model3) #b path
+mod4_loneliness_interact <- lme(rec_loneliness_avg ~ week + intervention + week:intervention, random = ~1 | sub_id, data = cleaned_df, method = "ML")
+summary(mod4_loneliness_interact)
+intervals(mod4_loneliness_interact)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$depression_all)
 
-saved5 = mediation1(y = 'rec_loneliness_avg', #DV 
-                    x = 'intervention', #IV
-                    m = 'comm_orientation_all', 
-                    cvs = c('week'), #Any covariates
-                    df = cleaned_df, #dataframe
-                    with_out = T, #not required but can change 
-                    nboot = 1000, #number of bootstraps
-                    conf_level = .95) #CI width
-summary(saved2)
-####view the analysis###
-summary(saved5$model1) #c path
-summary(saved5$model2) #a path
-summary(saved5$model3) #b path
+#Starting to build the conditional growth model (full model)
+#including all the predictors - try with random slope
+mod5_loneliness <- lme(rec_loneliness_avg ~ week + intervention, random = ~week | sub_id, data = cleaned_df, method = "ML")
+summary(mod5_loneliness)
+intervals(mod5_loneliness)
+
+mod5_loneliness_interact <- lme(rec_loneliness_avg ~ week + intervention + week:intervention, random = ~week | sub_id, data = cleaned_df, method = "ML")
+summary(mod5_loneliness_interact)
+intervals(mod5_loneliness_interact)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$stress_all)
