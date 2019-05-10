@@ -751,9 +751,13 @@ my_df <- inner_join(x = cleaned_control_df, y = cleaned_df, by = c('sub_id', 'in
 #which is an important first step when exploring the data and gives insight into the data to be explored
 library(lme4)
 library(nlme)
+library(sjPlot)
 #first, need to subtract 1 from week so that time starts at zero
-cleaned_df$week <- as.numeric(cleaned_df$week)
-cleaned_df <- mutate(cleaned_df, week = week - 1) 
+#cleaned_df$week <- as.numeric(cleaned_df$week)
+#cleaned_df <- mutate(cleaned_df, week = week - 1) 
+write.csv(joined_df, 'dissdata_complete.csv')
+
+head(cleaned_df)
 
 #It is good practice to standardize your explanatory variables before proceeding so that they have a 
 #mean of zero and sd of 1. It ensures that the estimated coefficients are all on the same scale, making
@@ -761,10 +765,68 @@ cleaned_df <- mutate(cleaned_df, week = week - 1)
 #scale centers the data (the comlumn mean is subtracted from the values in the column) and then scale it
 #(the centered column values are divided by the column's sd). 
 head(cleaned_df)
-#communal orientation
-#########
-#communal orientation
-model1_co <- lme(comm_orientation_all ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+
+#Screening data for outliers - stress
+output = lm(stress_all ~ week + intervention + comm_orientation_all, data = cleaned_df)
+mahal = mahalanobis(cleaned_df[, -1], 
+                    colMeans(cleaned_df[,-1], na.rm = TRUE),
+                    cov(cleaned_df[,-1]))
+cutoff = qchisq(1-.001, ncol(cleaned_df[, -1]))
+cutoff
+ncol(cleaned_df[,-1])
+badmahal = as.numeric(mahal > cutoff)
+table(badmahal) #this tells me I have 7 outliers
+
+#leverage
+k = 3
+leverage = hatvalues(output)
+cutleverage = (2*k+k) / nrow(cleaned_df)
+cutleverage
+
+badleverage = as.numeric(leverage > cutleverage)
+table(badleverage) #3 people with leverage over the slopes                         
+
+#cooks
+cooks = cooks.distance(output)
+cutcooks = 4/ (nrow(cleaned_df) - k - 1)                         
+cutcooks
+badcooks = as.numeric(cooks > cutcooks)
+table(cutcooks)
+
+#winsorizing the data
+summary(cleaned_df$rec_loneliness_avg)
+summary(cleaned_df$comm_orientation_all)
+class(cleaned_df$comm_orientation_all)
+boxplot(cleaned_df) 
+
+rec_loneliness_only <- cleaned_df$rec_loneliness_avg
+class(rec_loneliness_only)
+comm_orient_only <- cleaned_df$comm_orientation_all
+
+#setting the benchmark
+bench_rec_lone <- 1.0 + 1.5*IQR(rec_loneliness_only) #Q3 + 1.5*IQR
+bench_rec_lone
+bench_comm_orient <- 5.8 + 1.5*IQR(comm_orient_only)
+bench_comm_orient
+bench_stress <- 4.562 + 1.5*IQR(cleaned_df$stress_all)
+bench_stress
+bench_social_activity <- 3.250 + 1.5*IQR(cleaned_df$social_activity_all)
+bench_social_activity
+
+#WINSORIZING
+install.packages("DescTools")
+library(DescTools)
+cleaned_df$rec_loneliness_avg_win <- Winsorize(cleaned_df$rec_loneliness_avg)
+cleaned_df$comm_orientation_all_win <- Winsorize(cleaned_df$comm_orientation_all)
+cleaned_df$stress_all_win <- Winsorize(cleaned_df$stress_all)
+cleaned_df$social_activity_all_win <- Winsorize(cleaned_df$social_activity_all)
+head(cleaned_df)
+
+boxplot(cleaned_df[,-2])
+head(cleaned_df)
+
+######communal orientation####
+model1_uncond_co <- lme(comm_orientation_all_win ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
 summary(model1_co)
 #this tells us we can reject the null 
 intervals(model1_co)
@@ -777,44 +839,67 @@ xyplot(comm_orientation_all ~ week | sub_id, data = cleaned_df, type = c("p", "r
 
 #Now run unconditional growth models
 #unconditional growth model (mod2) time as a fixed slope
-mod2_co <- lme(comm_orientation_all~week, random = ~1|sub_id, data = cleaned_df, method = "ML")
+mod2_uncond_fixedslope_co <- update(model1_uncond_co, .~. + week)
 summary(mod2_co)
 intervals(mod2_co)
 (1.019348^2) / ((1.019348^2) + (0.7659641^2)) 
+
 #now run the unconditional growth model with time as a random slope
 ctrl <- lmeControl(opt = 'optim')
-mod3_co <- lme(comm_orientation_all~week, random = ~week|sub_id, data = cleaned_df, method = "ML", control = ctrl)
+mod3_uncond_randomslope_co <- update(mod2_uncond_fixedslope_co, random = ~week|sub_id, control = ctrl)
 summary(mod3_co)
 intervals(mod3_co)
 (1.1498172^2) / ((1.1498172^2) + (0.7548625^2))
+tab_model(mod2_co, mod3_co)
+
 #run deviant stats to compare the models 
 #first, rerun the first model (unconditional)
-model1_co <- lme(comm_orientation_all ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
 summary(model1_co)
 intervals(model1_co)
 
-#Compare unconditional means model (mod1) to unconditional growth model with a fixed slope (mod2)
+#Compare unconditional means model (mod1) to unconditional growth model with a ***fixed slope*** (mod2)
 (results <-anova(model1_co, mod2_co))
 results$'p-value'
 
-#Compare unconditional means model (mod1) to unconditional growth model with a random slope (mod2)
+#Compare unconditional means model (mod1) to unconditional growth model with a ***random slope*** (mod3)
 (results <-anova(model1_co, mod3_co))
 results$'p-value'
 
 #Starting to build the conditional growth model (full model)
-#including all the predictors
-mod4_co <- lme(comm_orientation_all ~ week + intervention, random = ~1 | sub_id, data = cleaned_df, method = "ML")
-summary(mod4_co)
-intervals(mod4_co)
-interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$comm_orientation_all)
+#including intervention as a predictor ***fixed***
+mod4_cond_fixed_co <- update(mod3_uncond_randomslope_co, .~. + intervention)
+summary(mod4_fixed_co)
+intervals(mod4_fixed_co)
+
+model4_cond_randomslopes_co <- lme(comm_orientation_all ~ week + intervention, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model4_cond_randomslopes_co)
+intervals(model4_cond_randomslopes_co)
+
+anova(mod3_uncond_randomslope_co, model4_cond_randomslopes_co)
+
+mod4_cond_fixed_co_interact <- update(mod4_cond_fixed_co, .~. + week:intervention, random)
+summary(mod4_fixed_co_interact)
+intervals(mod4_fixed_co_interact)
+
+#adding higher-order polynomials
+time_quadratic_co <- update(mod4_cond_fixed_co_interact, .~. + I(week^2))
+summary(time_quadratic_co)
+intervals(time_quadratic_co)
+
+time_cubic_co <- update(time_quadratic_co, .~. + I(week^3))
+summary(time_cubic_co)
+intervals(time_cubic_co)
 
 #Starting to build the conditional growth model (full model)
 #including all the predictors - try with random slope
-mod5_co <- lme(comm_orientation_all ~ week + intervention, random = ~week | sub_id, data = cleaned_df, method = "ML")
-summary(mod4_co)
-intervals(mod4_co)
-interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$comm_orientation_all)
+mod5_cond_randomslope_co <- update(time_cubic_co, random = ~week | sub_id)
+summary(mod5_random_co)
+intervals(mod5_random_co)
 
+anova(model1_uncond_co, mod2_uncond_fixedslope_co, mod3_uncond_randomslope_co, 
+      mod4_cond_fixed_co, mod4_cond_fixed_co_interact, mod4_fixed_co_interact, mod5_cond_randomslope_co)
+
+anova(mod4_fixed_co, mod4_fixed_co_interact, time_quadratic_co, time_cubic_co)
 #Other plotting twchniques
 xyplot(comm_orientation_all ~ week | sub_id, data = cleaned_df, groups = intervention, type = c("p", "r"))
 xyplot(comm_orientation_all ~ week | intervention, data = cleaned_df,
@@ -845,8 +930,7 @@ VarCorr(mod4_co)[2,1]
 #this provides the unexplained variance captured in the full model - 22% of variance is being captured in full model
 (as.numeric(VarCorr(mod3_co)[2,1])-as.numeric(VarCorr(mod4_co)[2,1])/as.numeric(VarCorr(mod3_co)[2,1])) 
 
-#vitality
-#########
+####vitality#####
 model1_vit <- lme(vitality ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
 summary(model1_vit)
 #this tells us we can reject the null 
@@ -906,7 +990,7 @@ summary(mod6_vit)
 intervals(mod6_vit)
 
 #stress
-#########
+#####stress####
 model1_stress <- lme(stress_all ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
 summary(model1_stress)
 #this tells us we can reject the null 
@@ -956,12 +1040,20 @@ summary(mod4_stress_interact)
 intervals(mod4_stress_interact)
 interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$stress_all)
 
+anova(model1_stress, mod2_stress, mod3_stress, mod4_stress, mod4_stress_interact)
 #Starting to build the conditional growth model (full model)
 #including all the predictors - try with random slope
 mod5_stress <- lme(stress_all ~ week + intervention, random = ~week | sub_id, data = cleaned_df, method = "ML")
 summary(mod5_stress)
 intervals(mod5_stress)
 interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$stress_all)
+
+#now look to see if comm orientation mediates the relationship between intervention and stress
+mod6_stress <- lme(stress_all ~ week + intervention + week:intervention + comm_orientation_all + 
+                  comm_orientation_all:intervention + comm_orientation_all:week, random = ~1 | sub_id, 
+                  data = cleaned_df, method = "ML")
+summary(mod6_stress)
+intervals(mod6_stress)
 
 #Other plotting techniques
 xyplot(comm_orientation_all ~ week | sub_id, data = cleaned_df, groups = intervention, type = c("p", "r"))
@@ -993,9 +1085,7 @@ VarCorr(mod4_co)[2,1]
 #this provides the unexplained variance captured in the full model - 22% of variance is being captured in full model
 (as.numeric(VarCorr(mod3_co)[2,1])-as.numeric(VarCorr(mod4_co)[2,1])/as.numeric(VarCorr(mod3_co)[2,1])) 
 
-
-#depression
-#########
+####depression#####
 model1_depression <- lme(log_depression ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
 summary(model1_depression)
 #this tells us we can reject the null 
@@ -1061,9 +1151,7 @@ interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$stress_all
 
 
 #loneliness
-#########
-#loneliness
-head(cleaned_df)
+####loneliness#####
 model1_loneliness <- lme(rec_loneliness_avg ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
 summary(model1_loneliness)
 #this tells us we can reject the null 
@@ -1126,3 +1214,195 @@ mod5_loneliness_interact <- lme(rec_loneliness_avg ~ week + intervention + week:
 summary(mod5_loneliness_interact)
 intervals(mod5_loneliness_interact)
 interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$stress_all)
+
+
+#social activity 
+####social activity#####
+head(cleaned_df)
+model1_sa <- lme(social_activity_all ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model1_sa)
+#this tells us we can reject the null 
+intervals(model1_sa)
+#Calculate ICC
+(0.5686392^2) / ((0.5686392^2) + (0.3935991^2)) 
+
+#Unconditional Growth Model
+#Begin by plotting data to see individual slopes
+xyplot(social_activity_all ~ week | sub_id, data = cleaned_df, type = c("p", "r"))
+
+#Now run unconditional growth models
+#unconditional growth model (mod2) time as a fixed slope
+mod2_sa <- lme(social_activity_all~week, random = ~1|sub_id, data = cleaned_df, method = "ML")
+summary(mod2_sa)
+intervals(mod2_sa)
+(0.5689414^2) / ((0.5689414^2) + (0.3918484^2)) 
+
+#now run the unconditional growth model with time as a random slope
+ctrl <- lmeControl(opt = 'optim')
+mod3_sa <- lme(social_activity_all~week, random = ~week|sub_id, data = cleaned_df, method = "ML", control = ctrl)
+summary(mod3_sa)
+intervals(mod3_sa)
+(0.55983987^2) / ((0.55983987^2) + (0.38981692^2))
+#run deviant stats to compare the models 
+#first, rerun the first model (unconditional)
+model1_sa <- lme(social_activity_all ~ 1, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model1_sa)
+intervals(model1_sa)
+tab_model(mod2_sa, mod3_sa)
+#Compare unconditional means model (mod1) to unconditional growth model with a fixed slope (mod2)
+(results <-anova(model1_sa, mod2_sa))
+results$'p-value'
+
+#Compare unconditional means model (mod1) to unconditional growth model with a random slope (mod2)
+(results <-anova(model1_sa, mod3_sa))
+results$'p-value'
+
+#Starting to build the conditional growth model (full model)
+#including all the predictors
+#x as a fixed effect predicting y
+ctrl <- lmeControl(opt = 'optim')
+mod4_sa <- lme(social_activity_all ~ week + intervention + week:intervention, random = ~week | sub_id, 
+               data = cleaned_df, method = "ML", control = ctrl)
+summary(mod4_sa)
+intervals(mod4_sa)
+interaction.plot(cleaned_df$week, cleaned_df$intervention, cleaned_df$social_activity_all)
+(0.5420961^2) / ((0.5420961^2) + (0.3859581^2))
+
+#x as a fixed effect predicting m
+ctrl <- lmeControl(opt = 'optim')
+mod5_co_sa <- lme(comm_orientation_all ~ week + intervention + week:intervention, 
+                  random = ~week | sub_id, data = cleaned_df, method = "ML", control = ctrl)
+summary(mod5_co_sa)
+intervals(mod5_co_sa)
+
+#x fixed predicting y
+mod6_sa <- lme(social_activity_all ~ week + intervention + comm_orientation_all + week:intervention + 
+                  week:comm_orientation_all + intervention:comm_orientation_all, random = ~1 | 
+                  sub_id, data = cleaned_df, method = "ML")
+summary(mod6_sa)
+intervals(mod6_sa)
+
+
+#####
+install.packages("snakecase")
+library(snakecase)
+tab_model(mod4_sa, mod6_sa)
+
+
+#The Bayes Facotr
+#an alternative to classical statistics
+install.packages("BayesFactor")
+library(BayesFactor)
+
+#Bayesian multilevel mediation 
+install.packages("brms")
+library(brms)
+
+#Rerunning the models but with Bayesian statistics
+####communal orientation - Bayes####
+head(cleaned_df)
+model1_uncond_co_bayes <- brm(comm_orientation_all_win ~ 1 + week + (1 + week|sub_id), data = cleaned_df)
+summary(model1_co)
+#this tells us we can reject the null 
+intervals(model1_co)
+#Calculate ICC
+(1.016626^2) / ((1.016626^2) + (0.7802982^2)) 
+
+#Unconditional Growth Model
+#Begin by plotting data to see individual slopes
+xyplot(comm_orientation_all ~ week | sub_id, data = cleaned_df, type = c("p", "r"))
+
+#Now run unconditional growth models
+#unconditional growth model (mod2) time as a fixed slope
+mod2_uncond_fixedslope_co <- update(model1_uncond_co, .~. + week)
+summary(mod2_co)
+intervals(mod2_co)
+(1.019348^2) / ((1.019348^2) + (0.7659641^2)) 
+
+#now run the unconditional growth model with time as a random slope
+ctrl <- lmeControl(opt = 'optim')
+mod3_uncond_randomslope_co <- update(mod2_uncond_fixedslope_co, random = ~week|sub_id, control = ctrl)
+summary(mod3_co)
+intervals(mod3_co)
+(1.1498172^2) / ((1.1498172^2) + (0.7548625^2))
+tab_model(mod2_co, mod3_co)
+
+#run deviant stats to compare the models 
+#first, rerun the first model (unconditional)
+summary(model1_co)
+intervals(model1_co)
+
+#Compare unconditional means model (mod1) to unconditional growth model with a ***fixed slope*** (mod2)
+(results <-anova(model1_co, mod2_co))
+results$'p-value'
+
+#Compare unconditional means model (mod1) to unconditional growth model with a ***random slope*** (mod3)
+(results <-anova(model1_co, mod3_co))
+results$'p-value'
+
+#Starting to build the conditional growth model (full model)
+#including intervention as a predictor ***fixed***
+mod4_cond_fixed_co <- update(mod3_uncond_randomslope_co, .~. + intervention)
+summary(mod4_fixed_co)
+intervals(mod4_fixed_co)
+
+model4_cond_randomslopes_co <- lme(comm_orientation_all ~ week + intervention, random = ~1 |sub_id, data = cleaned_df, method = "ML")
+summary(model4_cond_randomslopes_co)
+intervals(model4_cond_randomslopes_co)
+
+anova(mod3_uncond_randomslope_co, model4_cond_randomslopes_co)
+
+mod4_cond_fixed_co_interact <- update(mod4_cond_fixed_co, .~. + week:intervention, random)
+summary(mod4_fixed_co_interact)
+intervals(mod4_fixed_co_interact)
+
+#adding higher-order polynomials
+time_quadratic_co <- update(mod4_cond_fixed_co_interact, .~. + I(week^2))
+summary(time_quadratic_co)
+intervals(time_quadratic_co)
+
+time_cubic_co <- update(time_quadratic_co, .~. + I(week^3))
+summary(time_cubic_co)
+intervals(time_cubic_co)
+
+#Starting to build the conditional growth model (full model)
+#including all the predictors - try with random slope
+mod5_cond_randomslope_co <- update(time_cubic_co, random = ~week | sub_id)
+summary(mod5_random_co)
+intervals(mod5_random_co)
+
+anova(model1_uncond_co, mod2_uncond_fixedslope_co, mod3_uncond_randomslope_co, 
+      mod4_cond_fixed_co, mod4_cond_fixed_co_interact, mod4_fixed_co_interact, mod5_cond_randomslope_co)
+
+anova(mod4_fixed_co, mod4_fixed_co_interact, time_quadratic_co, time_cubic_co)
+#Other plotting twchniques
+xyplot(comm_orientation_all ~ week | sub_id, data = cleaned_df, groups = intervention, type = c("p", "r"))
+xyplot(comm_orientation_all ~ week | intervention, data = cleaned_df,
+       prepanel = function(x,y) prepanel.loess(x,y,family = "gaussian"),
+       xlab = "Week", ylab = "Communal Orientation",
+       panel = function(x,y) {panel.xyplot(x,y)
+         panel.loess(x,y,family= "gaussian")}, as.table = TRUE)
+
+#Compare deviant statistics 
+(results <- anova(mod3_co, mod4_co))
+results$'p-value'
+
+#calculate proportion reduction between unconditional growth model with a random slope (mod3) and the full
+#conditional growth model with all predictors (mod4)
+#level 1 is comparing weeks (repeated measures) to communal orientation
+#this is at the repeated measures model
+VarCorr(mod3_co)[1,1]
+VarCorr(mod4_co)[1,1] #this shows us that there is proportion reduction taking place
+
+#Level 2 is comparing week plus all predictors to communal orientation
+#this is at the individual level
+VarCorr(mod3_co)[2,1]
+VarCorr(mod4_co)[2,1]
+
+#this provides the unexplained variance captured in the full model - 22% of variance is being captured in full model
+(as.numeric(VarCorr(mod3_co)[1,1])-as.numeric(VarCorr(mod4_co)[1,1])/as.numeric(VarCorr(mod3_co)[1,1])) 
+
+#this provides the unexplained variance captured in the full model - 22% of variance is being captured in full model
+(as.numeric(VarCorr(mod3_co)[2,1])-as.numeric(VarCorr(mod4_co)[2,1])/as.numeric(VarCorr(mod3_co)[2,1])) 
+
+
