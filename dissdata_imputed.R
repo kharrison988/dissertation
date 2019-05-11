@@ -1297,12 +1297,31 @@ library(BayesFactor)
 #Bayesian multilevel mediation 
 install.packages("brms")
 library(brms)
+library(ggplot2)
+#Need C++ installer
+remove.packages("rstan")
+if (file.exists(".RData")) file.remove("RData")
 
+install.packages("rstan", repos = "https://cloud.r-project.org/", dependencies = TRUE)
+pkgbuild::has_build_tools(debug = TRUE)
 #Rerunning the models but with Bayesian statistics
 ####communal orientation - Bayes####
 head(cleaned_df)
-model1_uncond_co_bayes <- brm(comm_orientation_all_win ~ 1 + week + (1 + week|sub_id), data = cleaned_df)
-summary(model1_co)
+model1_uncond_co_bayes <- brm(comm_orientation_all_win ~ 1 + intervention + week + intervention:week + (1|sub_id), 
+                                          data = cleaned_df, family = gaussian)
+summary(model1_uncond_co_bayes)
+plot(model1_uncond_co_bayes)
+pp = brms::pp_check(model1_uncond_co_bayes)
+pp + theme_bw()
+
+brms::marginal_plot(model1_uncond_co_bayes)
+newdata_co = data.frame(comm_orient = level(cleaned_df$comm_orientation_all_win))
+fit = fitted(
+  model1_uncond_co_bayes,
+  newdata = newdata_co,
+  re_formula = NA,
+  summary = TRUE)
+)
 #this tells us we can reject the null 
 intervals(model1_co)
 #Calculate ICC
